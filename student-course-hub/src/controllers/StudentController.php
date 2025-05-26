@@ -1,22 +1,32 @@
 <?php
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../models/Student.php';
-require_once __DIR__ . '/../models/Programme.php';
-require_once __DIR__ . '/../models/Module.php';
-require_once __DIR__ . '/../utils/Notification.php';
 
-class StudentController {
-    private $db;
+namespace App\Controllers;
+
+use App\Models\Student;
+use App\Models\Programme;
+use App\Models\Module;
+use App\Utils\Notification;
+
+require_once __DIR__ . '/../models/Model.php';
+use App\Models\Model;
+
+class StudentController extends Model {
     private $student;
     private $programme;
     private $module;
+    private $notification;
 
     public function __construct() {
-        $database = new Database();
-        $this->db = $database->getConnection();
-        $this->student = new Student($this->db);
-        $this->programme = new Programme($this->db);
-        $this->module = new Module($this->db);
+        try {
+            parent::__construct();
+            $this->student = new Student();
+            $this->programme = new Programme();
+            $this->module = new Module();
+            $this->notification = new Notification();
+        } catch (\Exception $e) {
+            error_log('Database connection error: ' . $e->getMessage());
+            throw new \Exception('Failed to initialize StudentController: ' . $e->getMessage());
+        }
     }
 
     public function registerInterest($courseId, $studentId) {
@@ -98,32 +108,44 @@ class StudentController {
                 throw new Exception("Student not found");
             }
 
+            // Get enrolled courses
+            $enrolledCourses = $this->student->getEnrolledCourses($studentId);
+
+            // Get deadlines
+            $deadlines = $this->student->getUpcomingDeadlines($studentId);
+
             // Get interested courses
             $interestedCourses = $this->student->getInterestedCourses($studentId);
 
-            // Get enrolled courses with progress
-            $enrolledCourses = $this->student->getEnrolledCourses($studentId);
-            foreach ($enrolledCourses as &$course) {
-                $course['progress'] = $this->calculateCourseProgress($studentId, $course['id']);
-            }
+            // Get current programme details with semester structure
+            $currentProgramme = $this->getCurrentProgramme($studentId);
 
-            // Get upcoming deadlines
-            $deadlines = $this->student->getUpcomingDeadlines($studentId);
+            // Get module prerequisites
+            $modulePrerequisites = $this->getModulePrerequisites($studentId);
 
-            // Get recommended courses
+            // Get notifications
+            $notifications = $this->getStudentNotifications($studentId);
+
+            // Get interest analytics
+            $interestAnalytics = $this->getInterestAnalytics($studentId);
+
+            // Get recommended courses based on interests and current progress
             $recommendedCourses = $this->getRecommendedCourses($studentId);
 
             return [
                 'student' => $student,
+                'enrolled_courses' => $enrolledCourses,
+                'deadlines' => $deadlines,
                 'interested_courses' => $interestedCourses,
                 'recommended_courses' => $recommendedCourses,
-                'enrolled_courses' => $enrolledCourses,
-                'deadlines' => $deadlines
+                'current_programme' => $currentProgramme,
+                'module_prerequisites' => $modulePrerequisites,
+                'notifications' => $notifications,
+                'interest_analytics' => $interestAnalytics
             ];
-
         } catch (Exception $e) {
-            error_log("Error viewing dashboard: " . $e->getMessage());
-            throw new Exception("Failed to load dashboard");
+            error_log("Error loading student dashboard: " . $e->getMessage());
+            throw new Exception("Failed to load dashboard data");
         }
     }
 
@@ -231,5 +253,181 @@ class StudentController {
         }
         
         return $validPrefs;
+    }
+
+    private function getCurrentProgramme($studentId) {
+        try {
+            // Get the student's current programme
+            $stmt = $this->db->prepare("
+                SELECT p.*, 
+                       m.id as module_id, 
+                       m.title as module_title,
+                       m.credits,
+                       m.year_of_study,
+                       m.semester,
+                       u.username as staff_name,
+                       u.email as staff_email,
+                       u.avatar_url as staff_avatar
+                FROM programmes p
+                JOIN student_programmes sp ON p.id = sp.programme_id
+                JOIN programme_modules pm ON p.id = pm.programme_id
+                JOIN modules m ON pm.module_id = m.id
+                LEFT JOIN users u ON m.staff_id = u.id
+                WHERE sp.student_id = ?
+                ORDER BY m.year_of_study, m.semester, m.title
+            ");
+            $stmt->execute([$studentId]);
+            
+            $programme = null;
+            $modules = [];
+            $staff = [];
+            
+            while ($row = $stmt->fetch()) {
+                if (!$programme) {
+                    $programme = [
+                        'id' => $row['id'],
+                        'title' => $row['title'],
+                        'description' => $row['description'],
+                        'level' => $row['level'],
+                        'years' => [],
+                        'staff' => []
+                    ];
+                }
+                
+                $year = $row['year_of_study'];
+                $semester = $row['semester'] ?? 1;
+                
+                if (!isset($programme['years'][$year])) {
+                    $programme['years'][$year] = [];
+                }
+                if (!isset($programme['years'][$year][$semester])) {
+                    $programme['years'][$year][$semester] = [];
+                }
+                
+                $programme['years'][$year][$semester][] = [
+                    'id' => $row['module_id'],
+                    'title' => $row['module_title'],
+                    'credits' => $row['credits']
+                ];
+                
+                if ($row['staff_name'] && !isset($staff[$row['staff_name']])) {
+                    $staff[$row['staff_name']] = [
+                        'name' => $row['staff_name'],
+                        'email' => $row['staff_email'],
+                        'avatar_url' => $row['staff_avatar'],
+                        'role' => 'Module Leader'
+                    ];
+                }
+            }
+            
+            if ($programme) {
+                $programme['staff'] = array_values($staff);
+            }
+            
+            return $programme;
+        } catch (Exception $e) {
+            error_log("Error getting current programme: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function getModulePrerequisites($studentId) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT m.id, m.title, 
+                       GROUP_CONCAT(pm.prerequisite_module_id) as prerequisites
+                FROM modules m
+                JOIN programme_modules pgm ON m.id = pgm.module_id
+                JOIN student_programmes sp ON pgm.programme_id = sp.programme_id
+                LEFT JOIN module_prerequisites pm ON m.id = pm.module_id
+                WHERE sp.student_id = ?
+                GROUP BY m.id
+                ORDER BY m.year_of_study, m.semester
+            ");
+            $stmt->execute([$studentId]);
+            
+            $modules = [];
+            while ($row = $stmt->fetch()) {
+                $prerequisites = [];
+                if ($row['prerequisites']) {
+                    $prereqIds = explode(',', $row['prerequisites']);
+                    $prerequisites = $this->getModulesByIds($prereqIds);
+                }
+                
+                $modules[] = [
+                    'id' => $row['id'],
+                    'title' => $row['title'],
+                    'prerequisites' => $prerequisites
+                ];
+            }
+            
+            return $modules;
+        } catch (Exception $e) {
+            error_log("Error getting module prerequisites: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    private function getStudentNotifications($studentId) {
+        try {
+            return $this->notification->getStudentNotifications($studentId);
+        } catch (Exception $e) {
+            error_log("Error getting notifications: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    private function getInterestAnalytics($studentId) {
+        try {
+            // Get total interests registered
+            $stmt = $this->db->prepare("
+                SELECT COUNT(*) as total_interests
+                FROM student_interests
+                WHERE student_id = ?
+            ");
+            $stmt->execute([$studentId]);
+            $totalInterests = $stmt->fetchColumn();
+
+            // Get interests by programme level
+            $stmt = $this->db->prepare("
+                SELECT p.level, COUNT(*) as count
+                FROM student_interests si
+                JOIN programmes p ON si.programme_id = p.id
+                WHERE si.student_id = ?
+                GROUP BY p.level
+            ");
+            $stmt->execute([$studentId]);
+            $interestsByLevel = $stmt->fetchAll();
+
+            $analytics = [
+                [
+                    'label' => 'Total Interests',
+                    'value' => $totalInterests
+                ]
+            ];
+
+            foreach ($interestsByLevel as $interest) {
+                $analytics[] = [
+                    'label' => ucfirst($interest['level']) . ' Programmes',
+                    'value' => $interest['count']
+                ];
+            }
+
+            return $analytics;
+        } catch (Exception $e) {
+            error_log("Error getting interest analytics: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    private function getModulesByIds($moduleIds) {
+        $placeholders = str_repeat('?,', count($moduleIds) - 1) . '?';
+        $stmt = $this->db->prepare("
+            SELECT id, title 
+            FROM modules 
+            WHERE id IN ($placeholders)
+        ");
+        $stmt->execute($moduleIds);
+        return $stmt->fetchAll();
     }
 }

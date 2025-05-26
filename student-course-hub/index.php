@@ -7,28 +7,29 @@ ini_set('display_errors', 1);
 define('BASE_PATH', __DIR__);
 define('BASE_URL', '/student-course-hub');
 
+// Start session
+session_start();
+
 // Load configurations
 require_once BASE_PATH . '/src/config/config.php';
 require_once BASE_PATH . '/src/config/database.php';
 
 // Load controllers
 require_once BASE_PATH . '/src/controllers/AuthController.php';
-require_once BASE_PATH . '/src/controllers/CourseController.php';
+require_once BASE_PATH . '/src/controllers/AdminController.php';
+require_once BASE_PATH . '/src/controllers/StaffController.php';
 require_once BASE_PATH . '/src/controllers/StudentController.php';
 
-// Start session
-session_start();
+// Include base model and models
+require_once BASE_PATH . '/src/models/Model.php';
+require_once BASE_PATH . '/src/models/User.php';
+require_once BASE_PATH . '/src/models/Programme.php';
+require_once BASE_PATH . '/src/models/Module.php';
+require_once BASE_PATH . '/src/models/Staff.php';
+require_once BASE_PATH . '/src/models/Student.php';
 
-// Load controllers
-$authController = new AuthController();
-$courseController = new CourseController();
-$studentController = new StudentController();
-
-// Get the request URI
-$request = $_SERVER['REQUEST_URI'];
-$base = '/student-course-hub';
-$path = str_replace($base, '', $request);
-$path = rtrim($path, '/');
+// Load routes
+require_once BASE_PATH . '/routes/web.php';
 
 // Parse query string if exists
 $queryPos = strpos($path, '?');
@@ -55,7 +56,8 @@ switch ($path) {
         
     case '/auth/logout':
     case '/auth/logout.php':
-        $authController->logout();
+        $auth = new \App\Controllers\AuthController();
+        $auth->logout();
         header('Location: ' . BASE_URL . '/');
         exit();
         break;

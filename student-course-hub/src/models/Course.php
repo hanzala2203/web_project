@@ -1,16 +1,24 @@
 <?php
 
-class Course {
-    private $id;
-    private $title;
-    private $description;
-    private $credits;
+namespace App\Models;
 
-    public function __construct($id, $title, $description, $credits) {
-        $this->id = $id;
-        $this->title = $title;
-        $this->description = $description;
-        $this->credits = $credits;
+class Course extends Model {
+    private $table = 'courses';
+
+    public function findById($id) {
+        $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch();
+    }
+
+    public function create($data) {
+        $sql = "INSERT INTO {$this->table} (title, description, credits) VALUES (:title, :description, :credits)";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            ':title' => $data['title'],
+            ':description' => $data['description'],
+            ':credits' => $data['credits']
+        ]);
     }
 
     public function getId() {

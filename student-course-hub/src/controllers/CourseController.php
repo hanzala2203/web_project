@@ -1,20 +1,19 @@
 <?php
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../models/Programme.php';
-require_once __DIR__ . '/../models/Module.php';
-require_once __DIR__ . '/../utils/ImageValidator.php';
-require_once __DIR__ . '/../utils/Cache.php';
+
+namespace App\Controllers;
+
+use App\Models\Programme;
+use App\Models\Module;
+use App\Utils\ImageValidator;
+use App\Utils\Cache;
 
 class CourseController {
-    private $db;
     private $programme;
     private $module;
 
     public function __construct() {
-        $database = new Database();
-        $this->db = $database->getConnection();
-        $this->programme = new Programme($this->db);
-        $this->module = new Module($this->db);
+        $this->programme = new Programme();
+        $this->module = new Module();
     }
 
     public function listProgrammes($filters = []) {
@@ -29,27 +28,48 @@ class CourseController {
             $conditions = ['is_published = 1'];
             $params = [];
 
-            // Enhanced filters
+            // Enhanced filters with better search
+            if (!empty($filters['search'])) {
+                $searchTerm = "%" . $filters['search'] . "%";
+                $conditions[] = "(
+                    title LIKE :search 
+                    OR description LIKE :search 
+                    OR keywords LIKE :search 
+                    OR department LIKE :search
+                )";
+                $params[':search'] = $searchTerm;
+            }
+
             if (!empty($filters['level'])) {
                 $conditions[] = "level = :level";
                 $params[':level'] = $filters['level'];
             }
 
-            if (!empty($filters['search'])) {
-                $conditions[] = "(title LIKE :search OR description LIKE :search)";
-                $params[':search'] = "%" . $filters['search'] . "%";
-            }
-
-            // Add duration filter
             if (!empty($filters['duration'])) {
                 $conditions[] = "duration = :duration";
                 $params[':duration'] = $filters['duration'];
             }
 
-            // Add sorting
-            $orderBy = !empty($filters['sort']) ? $filters['sort'] : 'title ASC';
+            if (!empty($filters['department'])) {
+                $conditions[] = "department = :department";
+                $params[':department'] = $filters['department'];
+            }
+
+            // Dynamic sorting
+            $validSortFields = ['title', 'interest_count', 'created_at'];
+            $sortField = in_array($filters['sort_by'] ?? '', $validSortFields) ? $filters['sort_by'] : 'title';
+            $sortOrder = ($filters['sort_order'] ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
+            $orderBy = "{$sortField} {$sortOrder}";
             
             $results = $this->programme->findAll($conditions, $params, $orderBy);
+
+            // Add department list for filters
+            $departments = $this->programme->getDepartments();
+            $results = [
+                'programmes' => $results,
+                'departments' => $departments
+            ];
+
             Cache::set($cacheKey, $results, 3600); // Cache for 1 hour
             
             return $results;
