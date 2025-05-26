@@ -1,18 +1,17 @@
 <?php
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../models/User.php';
+
+namespace App\Controllers;
+
+use App\Models\User;
+use Exception;
 
 class AuthController {
-    private $db;
     private $user;
-
     private $maxLoginAttempts = 5;
     private $lockoutTime = 900; // 15 minutes
 
     public function __construct() {
-        $database = new Database();
-        $this->db = $database->getConnection();
-        $this->user = new User($this->db);
+        $this->user = new User();
     }
 
     private function checkLoginAttempts($email) {
@@ -112,6 +111,8 @@ class AuthController {
             // Redirect based on role
             if ($user['role'] === 'admin') {
                 header('Location: ' . BASE_URL . '/admin/dashboard');
+            } else if ($user['role'] === 'staff') {
+                header('Location: ' . BASE_URL . '/staff/dashboard');
             } else {
                 header('Location: ' . BASE_URL . '/student/dashboard');
             }
@@ -191,12 +192,17 @@ class AuthController {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
-        session_destroy();
+        
+        // Clear all session variables
+        $_SESSION = array();
         
         // Clear session cookie
         if (isset($_COOKIE[session_name()])) {
             setcookie(session_name(), '', time()-3600, '/');
         }
+        
+        // Destroy the session
+        session_destroy();
         
         return true;
     }

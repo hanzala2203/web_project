@@ -1,6 +1,12 @@
 CREATE DATABASE IF NOT EXISTS student_course_hub;
 USE student_course_hub;
 
+DROP TABLE IF EXISTS student_interests;
+DROP TABLE IF EXISTS programme_modules;
+DROP TABLE IF EXISTS modules;
+DROP TABLE IF EXISTS programmes;
+DROP TABLE IF EXISTS users;
+
 CREATE TABLE users (
     id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(50) UNIQUE NOT NULL,
@@ -27,8 +33,10 @@ CREATE TABLE modules (
     description TEXT,
     credits INT NOT NULL,
     year_of_study INT NOT NULL,
+    programme_id INT, -- Added this line
     staff_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (programme_id) REFERENCES programmes(id), -- Added this line
     FOREIGN KEY (staff_id) REFERENCES users(id)
 );
 

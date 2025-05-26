@@ -1,0 +1,64 @@
+{% extends "layouts/base.twig" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+        <nav>
+            <ul>
+                <li class="active"><a href="{{ url_for('admin.dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="{{ url_for('admin.programmes') }}"><i class="fas fa-graduation-cap"></i> Programmes</a></li>
+                <li><a href="{{ url_for('admin.students') }}"><i class="fas fa-users"></i> Students</a></li>
+                <li><a href="{{ url_for('admin.modules') }}"><i class="fas fa-book"></i> Modules</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+        <div class="admin-header">
+            <h1>Admin Dashboard</h1>
+            <div class="user-info">
+                <span>Welcome, {{ auth.username }}</span>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-logout">Logout</a>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            {% for stat in stats %}
+            <div class="stat-card">
+                <div class="stat-icon {{ stat.bg_class }}">
+                    <i class="fas fa-{{ stat.icon }}"></i>
+                </div>
+                <div class="stat-details">
+                    <h3>{{ stat.title }}</h3>
+                    <p class="stat-number">{{ stat.value }}</p>
+                    <span class="stat-label">{{ stat.label }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="dashboard-section">
+            <h2>Recent Activity</h2>
+            <div class="activity-list">
+                {% for activity in activities %}
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-{{ activity.icon }}"></i>
+                    </div>
+                    <div class="activity-details">
+                        <p>{{ activity.description }}</p>
+                        <span class="activity-time">{{ activity.time }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

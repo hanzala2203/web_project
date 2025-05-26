@@ -1,12 +1,11 @@
 <?php
 
-class User {
-    private $db;
-    private $table = 'users';
+namespace App\Models;
 
-    public function __construct($db) {
-        $this->db = $db;
-    }
+use PDO;
+
+class User extends Model {
+    private $table = 'users';
 
     public function findByEmail($email) {
         $query = "SELECT * FROM {$this->table} WHERE email = :email";
