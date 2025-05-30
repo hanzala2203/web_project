@@ -1,44 +1,21 @@
 <?php
-require_once __DIR__ . '/../../controllers/StudentController.php';
-use App\Controllers\StudentController;
+// Variables that should be available:
+// $programme - Programme details
+// $structure - Programme structure by year/semester
+// $totalCredits - Total programme credits
+// $staffMembers - Programme staff members
+// $hasInterest - Whether current student has registered interest
+// $studentId - Current student ID if logged in
 
-// Check if programme ID is provided
-if (!isset($_GET['id']) || empty($_GET['id'])) {
-    header('Location: /student-course-hub/student/explore_programmes.php');
+if (!isset($programme)) {
+    header('Location: ' . BASE_URL . '/error');
     exit;
 }
 
-$programmeId = (int)$_GET['id'];
-$studentId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
+$programmeId = $programme['id'];
+$pageTitle = "Programme Details: " . htmlspecialchars($programme['title']);
 
-$studentController = new StudentController();
-
-try {
-    // Get programme details with structure
-    $programmeData = $studentController->getProgrammeStructure($programmeId);
-    
-    // Extract programme details and structure
-    $programme = $programmeData['programme'];
-    $structure = $programmeData['structure'];
-    $totalCredits = $programmeData['total_credits'];
-    
-    // Check if student has registered interest
-    $hasInterest = false;
-    if ($studentId) {
-        $hasInterest = $studentController->student->hasInterest($studentId, $programmeId);
-    }
-    
-    // Get programme staff members
-    $staffMembers = $studentController->programme->getStaffMembers($programmeId);
-    
-    $pageTitle = "Programme Details: " . htmlspecialchars($programme['title']);
-} catch (Exception $e) {
-    // Handle errors
-    $error = $e->getMessage();
-    $pageTitle = "Programme Details";
-}
-
-require_once '../layouts/header.php';
+require_once BASE_PATH . '/src/views/layouts/header.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -177,7 +154,7 @@ require_once '../layouts/header.php';
                                     Manage Interests
                                 </a>
                             <?php else: ?>
-                                <a href="../auth/login.php?redirect=../student/programme_details.php?id=<?= $programmeId ?>" 
+                                <a href="<?= BASE_URL ?>/auth/login?redirect=<?= BASE_URL ?>/student/programme_details?id=<?= $programmeId ?>" 
                                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     <i class="fas fa-sign-in-alt mr-2"></i>
                                     Login to Register Interest

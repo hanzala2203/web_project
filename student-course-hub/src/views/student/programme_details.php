@@ -529,7 +529,7 @@ require_once '../layouts/header.php';
                                 <i class="fas fa-list"></i> Manage Interests
                             </a>
                         <?php else: ?>
-                            <a href="../auth/login.php?redirect=../student/programme_details.php?id=<?= $programmeId ?>" class="btn btn-primary">
+                            <a href="<?= BASE_URL ?>/auth/login?redirect=<?= BASE_URL ?>/student/programme_details?id=<?= $programmeId ?>" class="btn btn-primary">
                                 <i class="fas fa-sign-in-alt"></i> Login to Register Interest
                             </a>
                         <?php endif; ?>
