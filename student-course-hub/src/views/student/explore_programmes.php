@@ -418,7 +418,7 @@ require_once __DIR__ . '/../layouts/header.php';
                                 <?php endforeach; ?>
                             </div>
                             <?php endif; ?>
-                            <div class="programme-actions">                            <a href="<?= BASE_URL ?>/student/programme_details.php?id=<?= $programme['id'] ?>" class="btn btn-primary">
+                            <div class="programme-actions">                            <a href="<?= BASE_URL ?>/student/programme_details?id=<?= $programme['id'] ?>" class="btn btn-primary">
                                 <i class="fas fa-info-circle"></i> View Details
                             </a>
                             <?php if (isset($_SESSION['user_id'])): ?>

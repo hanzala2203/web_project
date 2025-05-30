@@ -203,12 +203,18 @@ switch ($path) {
         $student->viewDashboard();
         break;
 
-    case '/student/manage_interests':
-        require_once BASE_PATH . '/src/views/student/manage_interests.php';
+    case '/student/programme_details':
+    case '/student/programme_details_new':
+        $student = new \App\Controllers\StudentController();
+        $student->viewProgrammeDetails($_GET['id'] ?? null);
         break;
 
-    case '/student/programme_details':
-        require_once BASE_PATH . '/src/views/student/programme_details.php';
+    case '/student/programme_details_debug':
+        require_once BASE_PATH . '/src/views/student/programme_details_debug.php';
+        break;
+
+    case '/student/manage_interests':
+        require_once BASE_PATH . '/src/views/student/manage_interests.php';
         break;
 
     case '/student/register_interest':

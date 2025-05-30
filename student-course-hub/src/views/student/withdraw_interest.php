@@ -11,7 +11,7 @@ if (!isset($_SESSION['user_id'])) {
 
 $studentId = $_SESSION['user_id'];
 $programmeId = $_POST['programme_id'] ?? $_GET['id'] ?? null;
-$redirectUrl = isset($_POST['redirect']) ? $_POST['redirect'] : 'programme_details.php?id=' . $programmeId;
+$redirectUrl = isset($_POST['redirect']) ? $_POST['redirect'] : BASE_URL . '/student/programme_details?id=' . $programmeId;
 
 if (!$programmeId) {
     $_SESSION['error'] = 'No programme specified.';

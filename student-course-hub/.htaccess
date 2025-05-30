@@ -1,0 +1,26 @@
+RewriteEngine On
+RewriteBase /student-course-hub/
+
+# Allow direct access to files in public folder
+RewriteCond %{REQUEST_URI} ^/student-course-hub/public/
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# Remove .php extension
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^([^.]+)$ $1.php [L]
+
+# Remove .php extension
+RewriteCond %{REQUEST_FILENAME} !-d 
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^([^\.]+)$ $1.php [NC,L]
+
+# Forward all requests to index.php unless they point to an existing file or directory
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# PHP settings
+php_flag display_errors on
+php_value error_reporting E_ALL

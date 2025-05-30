@@ -83,7 +83,7 @@ require_once '../layouts/header.php';
                             </p>
                             
                             <div class="interest-actions">
-                                <a href="programme_details.php?id=<?= $programme['id'] ?>" class="btn btn-primary">
+                                <a href="<?= BASE_URL ?>/student/programme_details?id=<?= $programme['id'] ?>" class="btn btn-primary">
                                     <i class="fas fa-info-circle"></i> View Details
                                 </a>
                                 <form action="withdraw_interest.php" method="POST">

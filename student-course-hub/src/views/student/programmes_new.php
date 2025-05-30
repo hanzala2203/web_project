@@ -98,11 +98,7 @@ require_once __DIR__ . '/layouts/header.php';
                                 </span>
                                 <?php endforeach; ?>
                             </div>
-                            <?php endif; ?>
-
-                            <!-- Actions -->
-                            <div class="flex gap-3">
-                                <a href="<?= BASE_URL ?>/student/programme_details.php?id=<?= $programme['id'] ?>" 
+                            <?php endif; ?>                            <!-- Actions -->                            <div class="flex gap-3">                                <a href="<?= BASE_URL ?>/student/programme_details?id=<?= $programme['id'] ?>" 
                                    class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     <i class="fas fa-info-circle mr-2"></i>
                                     View Details
@@ -115,7 +111,7 @@ require_once __DIR__ . '/layouts/header.php';
                                             Register Interest
                                         </button>
                                     <?php else: ?>
-                                        <a href="<?= BASE_URL ?>/student/manage_interests.php" 
+                                        <a href="<?= BASE_URL ?>/student/manage_interests" 
                                            class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-green-600 rounded-md shadow-sm text-sm font-medium text-green-600 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                                             <i class="fas fa-bookmark mr-2"></i>
                                             Registered
@@ -258,7 +254,7 @@ require_once __DIR__ . '/layouts/header.php';
                                     </div>
                                 ` : ''}
                                 <div class="flex gap-3">
-                                    <a href="${BASE_URL}/student/programme_details.php?id=${programme.id}" 
+                                    <a href="<?= BASE_URL ?>/student/programme_details?id=${programme.id}" 
                                        class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                         <i class="fas fa-info-circle mr-2"></i>
                                         View Details
@@ -284,30 +280,39 @@ require_once __DIR__ . '/layouts/header.php';
     levelFilter.addEventListener('change', filterProgrammes);
     departmentFilter.addEventListener('change', filterProgrammes);
 
-    // Register interest function
-    async function registerInterest(programmeId) {
+    // Register interest function    async function registerInterest(programmeId) {
         try {
-            const response = await fetch(`${BASE_URL}/student/register_interest.php`, {
+            const response = await fetch('register_interest_api.php', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ programme_id: programmeId })
             });
             
+            const data = await response.json();
+            
             if (response.ok) {
                 // Update UI to show registered state
-                const button = event.target.closest('button');
-                button.innerHTML = '<i class="fas fa-bookmark mr-2"></i>Registered';
-                button.classList.remove('border-gray-300', 'text-gray-700', 'bg-white', 'hover:bg-gray-50');
-                button.classList.add('border-green-600', 'text-green-600', 'bg-green-50', 'hover:bg-green-100');
-                button.disabled = true;
+                const button = document.querySelector(`button[onclick="registerInterest(${programmeId})"]`);
+                if (button) {
+                    const parent = button.parentElement;
+                    parent.innerHTML = `
+                        <a href="manage_interests.php" 
+                           class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-green-600 rounded-md shadow-sm text-sm font-medium text-green-600 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            <i class="fas fa-bookmark mr-2"></i>
+                            Registered
+                        </a>
+                    `;
+                }
+                // Show success message
+                alert('Successfully registered interest in this programme!');
             } else {
-                throw new Error('Failed to register interest');
+                throw new Error(data.error || 'Failed to register interest');
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Failed to register interest. Please try again later.');
+            alert(error.message || 'Failed to register interest. Please try again later.');
         }
     }
     </script>

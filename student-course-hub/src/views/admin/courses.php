@@ -1,0 +1,817 @@
+<?php
+require_once '../../controllers/AdminController.php';
+require_once '../../controllers/AuthController.php';
+
+// Initialize controllers
+$auth = new AuthController();
+$admin = new AdminController();
+
+// Check admin authentication
+$auth->requireRole('admin');
+
+// Handle form submissions
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    try {
+        if (isset($_POST['action'])) {
+            switch ($_POST['action']) {
+                case 'create':
+                    $admin->createProgram($_POST);
+                    $success = "Programme created successfully";
+                    break;
+                case 'update':
+                    $admin->updateProgram($_POST['id'], $_POST);
+                    $success = "Programme updated successfully";
+                    break;
+                case 'delete':
+                    $admin->deleteProgram($_POST['id']);
+                    $success = "Programme deleted successfully";
+                    break;
+                case 'publish':
+                    $admin->publishProgram($_POST['id']);
+                    $success = "Programme published successfully";
+                    break;
+            }
+        }
+    } catch (Exception $e) {
+        $error = $e->getMessage();
+    }
+}
+
+// Get all programmes
+$programmes = $admin->listProgrammes();
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Programmes</title>
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style type="text/css">
+        /* filepath: c:\\xampp\\htdocs\\student-course-hub\\public\\assets\\css\\admin-dashboard.css */
+/* Amazing, modern, interactive admin dashboard styles */
+.admin-container {
+    display: flex;
+    min-height: 100vh;
+    background: linear-gradient(120deg, #e0eafc 0%, #cfdef3 100%);
+}
+
+.admin-sidebar {
+    width: 260px; /* Slightly wider sidebar */
+    background: #1e293b; /* Dark blue-gray */
+    color: #e2e8f0; /* Lighter text for contrast */
+    padding: 0;
+    position: fixed;
+    height: 100vh;
+    box-shadow: 3px 0 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    z-index: 1000; /* Ensure sidebar is on top */
+    transition: width 0.3s ease;
+}
+
+.sidebar-header {
+    padding: 1.5rem 1.5rem;
+    text-align: center;
+    border-bottom: 1px solid #334155; /* Separator line */
+}
+
+.sidebar-header .logo {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #fff;
+    text-decoration: none;
+}
+
+.admin-sidebar nav {
+    flex-grow: 1; /* Allow nav to take available space */
+}
+
+.admin-sidebar nav ul {
+    list-style: none;
+    padding: 1rem 0;
+    margin: 0;
+}
+
+.admin-sidebar nav ul li {
+    margin-bottom: 0.5rem; /* Reduced margin */
+    transition: background 0.2s ease-in-out;
+}
+
+.admin-sidebar nav ul li a {
+    display: flex;
+    align-items: center;
+    color: #cbd5e1; /* Default link color */
+    text-decoration: none;
+    font-size: 1rem; /* Standardized font size */
+    padding: 0.9rem 1.5rem;
+    transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out, padding-left 0.2s ease-in-out;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    border-left: 4px solid transparent; /* For active state indicator */
+}
+
+.admin-sidebar nav ul li a i {
+    margin-right: 0.8rem; /* Adjusted icon margin */
+    font-size: 1.1rem; /* Slightly smaller icons */
+    width: 20px; /* Fixed width for icon alignment */
+    text-align: center;
+    transition: color 0.2s ease-in-out;
+}
+
+.admin-sidebar nav ul li:hover a,
+.admin-sidebar nav ul li.active a {
+    background-color: #334155; /* Darker background on hover/active */
+    color: #fff; /* White text on hover/active */
+    border-left-color: #3b82f6; /* Blue accent for active link */
+    padding-left: 1.8rem; /* Indent on hover/active */
+}
+
+.admin-sidebar nav ul li.active a {
+    font-weight: 600; /* Bolder for active link */
+}
+
+.sidebar-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #334155;
+    text-align: center;
+}
+
+.btn-logout-sidebar {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background-color: #ef4444; /* Red for logout */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    text-align: center;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.btn-logout-sidebar i {
+    margin-right: 0.5rem;
+}
+
+.btn-logout-sidebar:hover {
+    background-color: #dc2626; /* Darker red on hover */
+}
+
+
+.admin-main {
+    flex: 1;
+    margin-left: 260px; /* Match sidebar width */
+    padding: 2rem;
+    background-color: #f1f5f9; /* Light gray background for main content */
+    transition: margin-left 0.3s ease;
+}
+
+.admin-header-main {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.admin-header-main h1 {
+    font-size: 1.8rem;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.admin-header-main p {
+    font-size: 1rem;
+    color: #64748b;
+}
+
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: #fff; /* White background for cards */
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    border: 1px solid #e2e8f0; /* Light border */
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+    width: 56px; /* Slightly smaller icon container */
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-size: 1.8rem; /* Adjusted icon size */
+    color: #fff;
+}
+
+.stat-icon.bg-primary { background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%); }
+.stat-icon.bg-success { background: linear-gradient(135deg, #10b981 0%, #34d399 100%); }
+.stat-icon.bg-info   { background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%); }
+.stat-icon.bg-warning { background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); }
+
+.stat-details h3 {
+    margin: 0 0 0.25rem 0;
+    font-size: 0.9rem; /* Smaller heading */
+    color: #475569; /* Darker gray for heading */
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.stat-number {
+    font-size: 1.8rem; /* Slightly smaller number */
+    font-weight: 700; /* Bolder number */
+    margin: 0.25rem 0;
+    color: #1e293b;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.dashboard-section-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.dashboard-section {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border: 1px solid #e2e8f0;
+}
+
+.dashboard-section h2 {
+    font-size: 1.25rem;
+    color: #1e293b;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 0.75rem;
+}
+
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.action-card {
+    background-color: #f1f5f9; /* Light gray background */
+    padding: 1.25rem 1rem;
+    border-radius: 8px;
+    text-align: center;
+    text-decoration: none;
+    color: #334155; /* Darker text */
+    font-weight: 500;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease-in-out;
+}
+
+.action-card:hover {
+    background-color: #e2e8f0; /* Slightly darker on hover */
+    color: #1e293b;
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+
+.action-card i {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+    display: block;
+    color: #3b82f6; /* Blue icon color */
+}
+
+.action-card span {
+    font-size: 0.9rem;
+}
+
+.activity-list {
+    max-height: 350px; /* Adjusted height */
+    overflow-y: auto;
+    padding-right: 0.5rem; /* For scrollbar */
+}
+
+/* Custom scrollbar for activity list */
+.activity-list::-webkit-scrollbar {
+  width: 6px;
+}
+.activity-list::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+.activity-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+.activity-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 0.25rem;
+    border-bottom: 1px solid #f1f5f9; /* Lighter separator */
+    transition: background-color 0.2s ease;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-item:hover {
+    background-color: #f8fafc; /* Very light hover */
+}
+
+.activity-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1.1rem;
+    font-size: 1.3rem;
+}
+
+.activity-icon i {
+    color: #fff;
+    font-size: 1rem; /* Smaller icon in activity */
+}
+
+/* Specific icon colors for activity */
+.activity-icon.icon-user-plus { background-color: #3b82f6; } /* Blue */
+.activity-icon.icon-graduation-cap { background-color: #10b981; } /* Green */
+.activity-icon.icon-book { background-color: #6366f1; } /* Indigo */
+.activity-icon.icon-default { background-color: #64748b; } /* Slate */
+
+
+.activity-details p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #334155;
+    line-height: 1.4;
+}
+
+.activity-time {
+    font-size: 0.75rem;
+    color: #94a3b8; /* Lighter gray for time */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .admin-sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+        box-shadow: none;
+        padding-bottom: 0;
+    }
+    .admin-main {
+        margin-left: 0;
+        padding: 1.5rem;
+    }
+    .sidebar-header,
+    .sidebar-footer {
+        text-align: left;
+        padding-left: 1.5rem;
+    }
+    .admin-sidebar nav ul li a {
+        padding: 0.8rem 1.5rem;
+    }
+    .stats-grid {
+        grid-template-columns: 1fr; /* Stack cards on smaller screens */
+    }
+    .dashboard-section-grid {
+        grid-template-columns: 1fr;
+    }
+    .quick-actions {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
+}
+
+/* General button styling (can be moved to admin.css or a global styles.css) */
+.btn {
+    display: inline-block;
+    font-weight: 500;
+    color: #fff;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    background-color: #3b82f6; /* Primary blue */
+    border: 1px solid #3b82f6;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    border-radius: 0.375rem; /* Bootstrap-like radius */
+    text-decoration: none;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+
+.btn:hover {
+    background-color: #2563eb; /* Darker blue */
+    border-color: #1d4ed8;
+    color: #fff;
+}
+
+.btn-primary {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+}
+.btn-primary:hover {
+    background-color: #2563eb;
+    border-color: #1d4ed8;
+}
+
+.btn-secondary {
+    background-color: #64748b; /* Slate */
+    border-color: #64748b;
+}
+.btn-secondary:hover {
+    background-color: #475569;
+    border-color: #334155;
+}
+
+.btn-success {
+    background-color: #10b981; /* Green */
+    border-color: #10b981;
+}
+.btn-success:hover {
+    background-color: #059669;
+    border-color: #047857;
+}
+
+.btn-danger {
+    background-color: #ef4444; /* Red */
+    border-color: #ef4444;
+}
+.btn-danger:hover {
+    background-color: #dc2626;
+    border-color: #b91c1c;
+}
+
+.btn-warning {
+    color: #1f2937;
+    background-color: #f59e0b; /* Amber */
+    border-color: #f59e0b;
+}
+.btn-warning:hover {
+    color: #1f2937;
+    background-color: #d97706;
+    border-color: #b45309;
+}
+
+.btn-info {
+    background-color: #38bdf8; /* Sky blue */
+    border-color: #38bdf8;
+}
+.btn-info:hover {
+    background-color: #0ea5e9;
+    border-color: #0284c7;
+}
+
+.btn-light {
+    color: #1f2937;
+    background-color: #f1f5f9; /* Light gray */
+    border-color: #f1f5f9;
+}
+.btn-light:hover {
+    color: #1f2937;
+    background-color: #e2e8f0;
+    border-color: #cbd5e1;
+}
+
+.btn-dark {
+    background-color: #1e293b; /* Dark blue-gray */
+    border-color: #1e293b;
+}
+.btn-dark:hover {
+    background-color: #0f172a;
+    border-color: #0f172a;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    border-radius: 0.25rem;
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+    border-radius: 0.5rem;
+}
+
+.btn-icon {
+    padding: 0.5rem;
+    width: calc(1.5em + 1rem); /* Ensure it\'s squarish based on font-size + padding */
+    height: calc(1.5em + 1rem);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Table Styles */
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: #212529;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: 0.75rem;
+    vertical-align: top;
+    border-top: 1px solid #dee2e6;
+}
+
+.table thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid #dee2e6;
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+}
+
+.table tbody tr:nth-of-type(odd) {
+    background-color: rgba(0,0,0,.025);
+}
+
+.table tbody tr:hover {
+    background-color: rgba(0,0,0,.05);
+}
+
+.table-actions a {
+    margin-right: 0.5rem;
+    color: #3b82f6;
+    text-decoration: none;
+}
+.table-actions a:hover {
+    color: #1d4ed8;
+}
+.table-actions .btn-danger {
+    color: #fff; /* Ensure text is white on danger button */
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-control {
+    display: block;
+    width: 100%;
+    padding: .5rem .75rem;
+    font-size: .9rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: .25rem;
+    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+
+.form-control:focus {
+    color: #495057;
+    background-color: #fff;
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 .25rem rgba(13,110,253,.25);
+}
+
+label {
+    display: inline-block;
+    margin-bottom: .5rem;
+    font-weight: 500;
+}
+
+/* Alert Styles */
+.alert {
+    position: relative;
+    padding: 1rem 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+    border-radius: .375rem;
+}
+
+.alert-primary {
+    color: #052c65;
+    background-color: #cfe2ff;
+    border-color: #b6d4fe;
+}
+
+.alert-success {
+    color: #0a3622;
+    background-color: #d1e7dd;
+    border-color: #badbcc;
+}
+
+.alert-danger {
+    color: #58151c;
+    background-color: #f8d7da;
+    border-color: #f5c2c7;
+}
+
+.alert-warning {
+    color: #664d03;
+    background-color: #fff3cd;
+    border-color: #ffecb5;
+}
+
+.alert-info {
+    color: #055160;
+    background-color: #cff4fc;
+    border-color: #b6effb;
+}
+
+/* Card Styles (General) */
+.card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: #fff;
+    background-clip: border-box;
+    border: 1px solid rgba(0,0,0,.125);
+    border-radius: .375rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.card-header {
+    padding: .75rem 1.25rem;
+    margin-bottom: 0;
+    background-color: rgba(0,0,0,.03);
+    border-bottom: 1px solid rgba(0,0,0,.125);
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.card-body {
+    flex: 1 1 auto;
+    padding: 1.25rem;
+}
+
+.card-footer {
+    padding: .75rem 1.25rem;
+    background-color: rgba(0,0,0,.03);
+    border-top: 1px solid rgba(0,0,0,.125);
+}
+
+/* Utility Classes */
+.mt-1 { margin-top: 0.25rem !important; }
+.mt-2 { margin-top: 0.5rem !important; }
+.mt-3 { margin-top: 1rem !important; }
+.mb-1 { margin-bottom: 0.25rem !important; }
+.mb-2 { margin-bottom: 0.5rem !important; }
+.mb-3 { margin-bottom: 1rem !important; }
+.p-1 { padding: 0.25rem !important; }
+.p-2 { padding: 0.5rem !important; }
+.p-3 { padding: 1rem !important; }
+.text-center { text-align: center !important; }
+.text-right { text-align: right !important; }
+.d-flex { display: flex !important; }
+.justify-content-between { justify-content: space-between !important; }
+.align-items-center { align-items: center !important; }
+    </style>
+</head>
+<body>
+
+<div class="admin-container">
+    <!-- Sidebar -->
+    <?php include_once __DIR__ . '/../layouts/sidebar.php'; ?>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+        <div class="admin-header-main"> <!-- Changed class from admin-header to admin-header-main to match CSS -->
+            <h1>Manage Programmes</h1>
+            <button class="btn btn-primary" onclick="showModal('createProgramModal')">
+                <i class="fas fa-plus"></i> Add New Programme
+            </button>
+        </div>
+
+        <?php if (isset($error)): ?>
+            <div class="alert alert-danger"><?php echo $error; ?></div>
+        <?php endif; ?>
+
+        <?php if (isset($success)): ?>
+            <div class="alert alert-success"><?php echo $success; ?></div>
+        <?php endif; ?>
+
+        <!-- Programmes Grid -->
+        <div class="programmes-grid">
+            <?php foreach ($programmes as $programme): ?>
+                <div class="programme-card <?php echo $programme['is_published'] ? 'published' : 'draft'; ?>">
+                    <div class="programme-header">
+                        <h3><?php echo htmlspecialchars($programme['title']); ?></h3>
+                        <div class="status-badge">
+                            <?php echo $programme['is_published'] ? 'Published' : 'Draft'; ?>
+                        </div>
+                    </div>
+                    
+                    <div class="programme-body">
+                        <p><?php echo htmlspecialchars(substr($programme['description'], 0, 150)) . '...'; ?></p>
+                        <div class="programme-meta">
+                            <span>Level: <?php echo ucfirst($programme['level']); ?></span>
+                            <span>Duration: <?php echo $programme['duration']; ?></span>
+                        </div>
+                    </div>
+
+                    <div class="programme-actions">
+                        <button class="btn btn-sm btn-edit" 
+                                onclick="editProgramme(<?php echo $programme['id']; ?>)">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        
+                        <form action="" method="POST" class="d-inline">
+                            <input type="hidden" name="action" value="<?php echo $programme['is_published'] ? 'unpublish' : 'publish'; ?>">
+                            <input type="hidden" name="id" value="<?php echo $programme['id']; ?>">
+                            <button type="submit" class="btn btn-sm <?php echo $programme['is_published'] ? 'btn-unpublish' : 'btn-publish'; ?>">
+                                <i class="fas fa-<?php echo $programme['is_published'] ? 'eye-slash' : 'eye'; ?>"></i>
+                                <?php echo $programme['is_published'] ? 'Unpublish' : 'Publish'; ?>
+                            </button>
+                        </form>
+
+                        <button class="btn btn-sm btn-danger" 
+                                onclick="confirmDelete(<?php echo $programme['id']; ?>)">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </main>
+</div>
+
+<!-- Create Programme Modal -->
+<div id="createProgramModal" class="modal">
+    <div class="modal-content">
+        <h2>Add New Programme</h2>
+        <form action="" method="POST">
+            <input type="hidden" name="action" value="create">
+            
+            <div class="form-group">
+                <label for="title">Programme Title</label>
+                <input type="text" id="title" name="title" class="form-control" required> <!-- Added form-control class -->
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" class="form-control" required></textarea> <!-- Added form-control class -->
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="level">Level</label>
+                    <select id="level" name="level" class="form-control" required> <!-- Added form-control class -->
+                        <option value="undergraduate">Undergraduate</option>
+                        <option value="postgraduate">Postgraduate</option>
+                    </select>
+                </div>
+                
+                <div class="form-group col-md-6">
+                    <label for="duration">Duration</label>
+                    <input type="text" id="duration" name="duration" class="form-control" required> <!-- Added form-control class -->
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="hideModal('createProgramModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Programme</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<?php include_once '../layouts/footer.php'; ?>
+
+<!-- Add the corresponding CSS -->
