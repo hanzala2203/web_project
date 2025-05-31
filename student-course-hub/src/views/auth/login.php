@@ -15,7 +15,12 @@ if (isset($_SESSION['user_id'])) {
     exit();
 }
 
-$error = '';
+// Update error initialization to include session errors
+if (isset($_SESSION['error'])) {
+    $error = $_SESSION['error'];
+    unset($_SESSION['error']);
+}
+$error = $error ?? '';
 
 // Start output buffering
 ob_start();
@@ -45,7 +50,7 @@ ob_start();
             </div>
         <?php endif; ?>
 
-        <form class="mt-8 space-y-6" action="<?php echo $base_url; ?>/login" method="POST">
+        <form class="mt-8 space-y-6" action="<?php echo $base_url; ?>/auth/login" method="POST">
             <div class="rounded-md shadow-sm -space-y-px">
                 <div>
                     <label for="email" class="sr-only">Email address</label>

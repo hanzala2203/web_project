@@ -90,6 +90,83 @@ main.content-area {
     100% { transform: rotate(360deg); }
 }
 
+/* Programme details styles */
+.programme-details {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.programme-header {
+    background-color: white;
+    border-radius: 0.5rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.programme-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.stat-box {
+    background-color: #f8fafc;
+    padding: 1.5rem;
+    border-radius: 0.375rem;
+    text-align: center;
+}
+
+.stat-box .stat-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1e40af;
+    margin-bottom: 0.5rem;
+}
+
+.stat-box .stat-label {
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+.programme-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    justify-content: flex-end;
+}
+
+.register-interest-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #2563eb;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.register-interest-btn:hover {
+    background-color: #1d4ed8;
+}
+
+.programme-content {
+    background-color: white;
+    border-radius: 0.5rem;
+    padding: 2rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.programme-description {
+    color: #475569;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     main.content-area {

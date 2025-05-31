@@ -2,6 +2,8 @@
 // Error reporting
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/php_errors.log');
 
 // Define constants
 define('BASE_PATH', __DIR__);
@@ -45,7 +47,18 @@ switch ($path) {
     // Auth routes
     case '/auth/login':
     case '/auth/login.php':
-        require_once BASE_PATH . '/src/views/auth/login.php';
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $auth = new \App\Controllers\AuthController();
+                $auth->login($_POST['email'], $_POST['password']);
+            } catch (Exception $e) {
+                $_SESSION['error'] = $e->getMessage();
+                header('Location: ' . BASE_URL . '/auth/login');
+                exit;
+            }
+        } else {
+            require_once BASE_PATH . '/src/views/auth/login.php';
+        }
         break;
         
     case '/auth/register':
@@ -64,16 +77,21 @@ switch ($path) {
     case '/student/explore_programmes.php':
         $student = new \App\Controllers\StudentController();
         $student->exploreProgrammes();
-        require_once BASE_PATH . '/src/views/student/programmes_new.php';
         break;
         
     case '/student/programme_details':
     case '/student/programme_details_new':
-        if (!isset($_GET['id'])) {
-            require BASE_PATH . '/src/views/404.php';
-            break;
+        try {
+            if (!isset($_GET['id'])) {
+                throw new \Exception('Programme ID is required');
+            }
+            $student = new \App\Controllers\StudentController();
+            $student->viewProgrammeDetails($_GET['id']);
+        } catch (\Exception $e) {
+            $_SESSION['error'] = $e->getMessage();
+            header('Location: ' . BASE_URL . '/error');
+            exit;
         }
-        require BASE_PATH . '/src/views/student/programme_details_new.php';
         break;
         
     case '/student/register_interest':
