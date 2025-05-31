@@ -94,6 +94,14 @@ switch ($path) {
         }
         break;
         
+    case '/student/interests/handle':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require_once BASE_PATH . '/src/views/student/handle_interest.php';
+        } else {
+            header('Location: ' . BASE_URL . '/student/explore_programmes');
+        }
+        break;
+        
     case '/student/register_interest':
     case '/student/register_interest.php':
         if (!isset($_POST['programme_id'])) {
@@ -108,6 +116,16 @@ switch ($path) {
     case '/student/manage_interests.php':
         $student = new \App\Controllers\StudentController();
         $student->viewInterests();
+        break;
+
+    case '/student/withdraw_interest':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $student = new \App\Controllers\StudentController();
+            $student->handleWithdrawInterest();
+        } else {
+            header('Location: ' . BASE_URL . '/student/manage_interests');
+            exit;
+        }
         break;
         
     // Admin routes

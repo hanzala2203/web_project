@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const BASE_URL = window.location.origin;
+    const BASE_URL = window.location.origin + '/student-course-hub';
     
     // Handle interest button clicks
     document.addEventListener('click', async (e) => {

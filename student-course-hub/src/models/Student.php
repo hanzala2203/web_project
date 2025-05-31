@@ -7,6 +7,23 @@ use PDO;
 class Student extends Model {
     private $table = 'users';
 
+    public function removeInterest($studentId, $programmeId) {
+        try {
+            $stmt = $this->db->prepare("
+                DELETE FROM student_interests 
+                WHERE student_id = :student_id 
+                AND programme_id = :programme_id
+            ");
+            return $stmt->execute([
+                ':student_id' => $studentId,
+                ':programme_id' => $programmeId
+            ]);
+        } catch (\Exception $e) {
+            error_log("Error removing interest: " . $e->getMessage());
+            return false;
+        }
+    }
+
     public function findById($id) {
         $query = "SELECT u.* 
                  FROM {$this->table} u
@@ -32,43 +49,121 @@ class Student extends Model {
         return (int)$stmt->fetchColumn() > 0;
     }
 
-    public function getInterestedCourses($studentId) {
-        $query = "SELECT p.* FROM programmes p 
+    public function getInterestedProgrammes($studentId) {
+        $query = "SELECT p.*, si.created_at as interest_date 
+                 FROM programmes p 
                  INNER JOIN student_interests si ON p.id = si.programme_id 
-                 WHERE si.student_id = :student_id";
+                 WHERE si.student_id = :student_id
+                 ORDER BY si.created_at DESC";
         
-        $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':student_id', $studentId);
-        $stmt->execute();
-        
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':student_id', $studentId);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            error_log("Error getting interested programmes: " . $e->getMessage());
+            return [];
+        }
     }
 
-    public function addInterest($studentId, $courseId) {
+    public function hasInterest($studentId, $programmeId) {
+        $query = "SELECT COUNT(*) FROM student_interests 
+                 WHERE student_id = :student_id 
+                 AND programme_id = :programme_id";
+        
         try {
-            $stmt = $this->db->prepare("INSERT INTO student_interests (student_id, programme_id, created_at) VALUES (?, ?, NOW())");
-            return $stmt->execute([$studentId, $courseId]);
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([
+                ':student_id' => $studentId,
+                ':programme_id' => $programmeId
+            ]);
+            return (int)$stmt->fetchColumn() > 0;
+        } catch (\Exception $e) {
+            error_log("Error checking interest: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function addInterest($studentId, $programmeId) {
+        if ($this->hasInterest($studentId, $programmeId)) {
+            error_log("Student already has interest - Student ID: $studentId, Programme ID: $programmeId");
+            return false;
+        }
+
+        try {
+            $stmt = $this->db->prepare("
+                INSERT INTO student_interests (student_id, programme_id, created_at, registered_at) 
+                VALUES (:student_id, :programme_id, NOW(), NOW())
+            ");
+            $result = $stmt->execute([
+                ':student_id' => $studentId,
+                ':programme_id' => $programmeId
+            ]);
+
+            if (!$result) {
+                error_log("Database error in addInterest - " . json_encode($stmt->errorInfo()));
+                return false;
+            }
+
+            return true;
         } catch (\Exception $e) {
             error_log("Error adding interest: " . $e->getMessage());
             return false;
         }
     }
 
-    public function removeInterest($studentId, $programmeId) {
+    public function registerInterest($studentId, $programmeId) {
         try {
-            $stmt = $this->db->prepare("DELETE FROM student_interests WHERE student_id = ? AND programme_id = ?");
-            return $stmt->execute([$studentId, $programmeId]);
+            $stmt = $this->db->prepare("
+                INSERT INTO student_interests (student_id, programme_id)
+                VALUES (:student_id, :programme_id)
+            ");
+            return $stmt->execute([
+                ':student_id' => $studentId,
+                ':programme_id' => $programmeId
+            ]);
         } catch (\Exception $e) {
-            error_log("Error removing interest: " . $e->getMessage());
+            // Check if error is due to duplicate entry
+            if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                error_log("Interest already registered");
+                return ['error' => 'Interest already registered'];
+            }
+            error_log("Error registering interest: " . $e->getMessage());
             return false;
         }
     }
 
-    public function hasInterest($studentId, $courseId) {
+    public function getStudentInterests($studentId) {
         try {
-            $stmt = $this->db->prepare("SELECT COUNT(*) FROM student_interests WHERE student_id = ? AND programme_id = ?");
-            $stmt->execute([$studentId, $courseId]);
-            return (bool)$stmt->fetchColumn();
+            $stmt = $this->db->prepare("
+                SELECT p.*, si.created_at as interest_date
+                FROM student_interests si
+                JOIN programmes p ON si.programme_id = p.id
+                WHERE si.student_id = :student_id
+                ORDER BY si.created_at DESC
+            ");
+            $stmt->execute([':student_id' => $studentId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            error_log("Error getting student interests: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function hasRegisteredInterest($studentId, $programmeId) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT COUNT(*) 
+                FROM student_interests 
+                WHERE student_id = :student_id 
+                AND programme_id = :programme_id
+            ");
+            $stmt->execute([
+                ':student_id' => $studentId,
+                ':programme_id' => $programmeId
+            ]);
+            return (int)$stmt->fetchColumn() > 0;
         } catch (\Exception $e) {
             error_log("Error checking interest: " . $e->getMessage());
             return false;
@@ -168,14 +263,11 @@ class Student extends Model {
                 $stmt->bindValue($key, $value);
             }
             $stmt->execute();
-            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $students = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         } catch (\PDOException $e) {
             error_log("Database error in getAllStudents: " . $e->getMessage());
             throw $e;
         }
-        $stmt = $this->db->prepare($query);
-        $stmt->execute();
-        $students = $stmt->fetchAll(\PDO::FETCH_ASSOC); // Corrected: removed extra backslash
 
         // Convert comma-separated interests string to an array of associative arrays
         // to match the view's expectation (array of interests, each with a 'title')
@@ -287,11 +379,12 @@ class Student extends Model {
 
     public function getInterests($studentId) {
         try {
-            $query = "SELECT p.*, si.created_at as interest_date
+            $query = "SELECT p.*, 
+                     COALESCE(si.created_at, si.registered_at) as interest_date
                      FROM programmes p 
                      INNER JOIN student_interests si ON p.id = si.programme_id 
                      WHERE si.student_id = :student_id AND p.is_published = 1
-                     ORDER BY si.created_at DESC";
+                     ORDER BY COALESCE(si.created_at, si.registered_at) DESC";
             
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':student_id', $studentId);

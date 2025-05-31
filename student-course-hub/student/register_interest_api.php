@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../../controllers/InterestController.php';
+require_once __DIR__ . '/../src/controllers/InterestController.php';
 
 // Set JSON response header
 header('Content-Type: application/json');
@@ -24,8 +24,9 @@ $programmeId = $data['programme_id'] ?? null;
 $action = $data['action'] ?? 'register'; // Default to register if not specified
 
 if (!$programmeId) {
+    error_log("Programme ID missing");
     http_response_code(400);
-    echo json_encode(['error' => 'No programme specified']);
+    echo json_encode(['error' => 'Programme ID is required']);
     exit;
 }
 
@@ -60,25 +61,9 @@ try {
             echo json_encode(['error' => 'Failed to register interest']);
         }
     }
-        if ($result) {
-            error_log("Successfully registered interest for Student ID: $studentId, Programme ID: $programmeId");
-            echo json_encode([
-                'success' => true,
-                'message' => 'Interest successfully registered'
-            ]);
-        } else {
-            error_log("Failed to register interest for Student ID: $studentId, Programme ID: $programmeId");
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'error' => 'Failed to register interest'
-            ]);
-            ]);
-    } else {
-        http_response_code(500);
-        echo json_encode(['error' => 'Failed to register interest']);
-    }
 } catch (Exception $e) {
+    error_log("Error in interest API: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['error' => 'Internal server error']);
 }
+?>
