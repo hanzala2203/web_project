@@ -45,37 +45,34 @@ class Student extends Model {
     }
 
     public function addInterest($studentId, $courseId) {
-        $query = "INSERT INTO student_interests (student_id, programme_id) 
-                 VALUES (:student_id, :programme_id)";
-        
-        $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':student_id', $studentId);
-        $stmt->bindParam(':programme_id', $courseId);
-        
-        return $stmt->execute();
+        try {
+            $stmt = $this->db->prepare("INSERT INTO student_interests (student_id, programme_id, created_at) VALUES (?, ?, NOW())");
+            return $stmt->execute([$studentId, $courseId]);
+        } catch (\Exception $e) {
+            error_log("Error adding interest: " . $e->getMessage());
+            return false;
+        }
     }
 
-    public function removeInterest($studentId, $courseId) {
-        $query = "DELETE FROM student_interests 
-                 WHERE student_id = :student_id AND programme_id = :programme_id";
-        
-        $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':student_id', $studentId);
-        $stmt->bindParam(':programme_id', $courseId);
-        
-        return $stmt->execute();
+    public function removeInterest($studentId, $programmeId) {
+        try {
+            $stmt = $this->db->prepare("DELETE FROM student_interests WHERE student_id = ? AND programme_id = ?");
+            return $stmt->execute([$studentId, $programmeId]);
+        } catch (\Exception $e) {
+            error_log("Error removing interest: " . $e->getMessage());
+            return false;
+        }
     }
 
     public function hasInterest($studentId, $courseId) {
-        $query = "SELECT COUNT(*) FROM student_interests 
-                 WHERE student_id = :student_id AND programme_id = :programme_id";
-        
-        $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':student_id', $studentId);
-        $stmt->bindParam(':programme_id', $courseId);
-        $stmt->execute();
-        
-        return (int)$stmt->fetchColumn() > 0;
+        try {
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM student_interests WHERE student_id = ? AND programme_id = ?");
+            $stmt->execute([$studentId, $courseId]);
+            return (bool)$stmt->fetchColumn();
+        } catch (\Exception $e) {
+            error_log("Error checking interest: " . $e->getMessage());
+            return false;
+        }
     }
 
     public function updatePreferences($studentId, $preferences) {

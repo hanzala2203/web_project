@@ -4,6 +4,11 @@
 $programmes = $programmes ?? [];
 $interests = $interests ?? [];
 $filters = $_GET ?? [];
+$departments = $departments ?? [];
+$query = $_GET['query'] ?? '';
+$level = $_GET['level'] ?? '';
+$duration = $_GET['duration'] ?? '';
+$department = $_GET['department'] ?? '';
 ?>
 
 <?php
@@ -11,436 +16,390 @@ $pageTitle = "Explore Programmes";
 require_once __DIR__ . '/../layouts/header.php';
 ?>
 
-<link rel="stylesheet" href="<?= BASE_URL ?>/public/assets/css/student.css">
+<!-- Load Tailwind and FontAwesome -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-<div class="container-fluid">
-    <div class="row">
-        <?php require_once __DIR__ . '/../layouts/sidebar.php'; ?>
-        
-        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-            <style>
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-        }
+<script>    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    primary: '#2563eb',
+                    secondary: '#64748b',
+                },
+                spacing: {
+                    '18': '4.5rem',
+                    '22': '5.5rem',
+                },
+                boxShadow: {
+                    'soft': '0 2px 15px -3px rgba(0,0,0,0.07), 0 10px 20px -2px rgba(0,0,0,0.04)',
+                },
+                animation: {
+                    'slide-up': 'slideUp 0.5s ease-out',
+                }
+            },
+        },
+    }
+</script>
 
-        :root {
-            --primary-color: #3b82f6;
-            --secondary-color: #4CAF50;
-            --error-color: #ef4444;
-            --link-color: #2563eb;
-            --link-hover-color: #1d4ed8;
-            --bg-color: #f1f5f9;
-            --card-color: #ffffff;
-        }
+<style>    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideUp {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    .animate-fadeIn {
+        animation: fadeIn 0.6s ease-out;
+    }
+    .animate-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }    .sidebar {
+        position: fixed;
+        inset-y-0;
+        left-0;
+        width: 64;
+        background: #1e1b4b;
+        box-shadow: 4px 0 15px -3px rgba(0,0,0,0.1);
+        z-index: 30;
+    }
+    .programme-card {
+        transition: all 0.3s ease;
+    }
+    .programme-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+</style>
 
-        body {
-            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-            line-height: 1.5;
-            background-color: var(--bg-color);
-            color: #1e293b;
-            min-height: 100vh;
-        }
+<div class="min-h-screen bg-[#f8fafc]">
+    <?php require_once __DIR__ . '/../layouts/student_sidebar_new.php'; ?>
+    <main class="ml-64 p-8">
+        <div class="max-w-7xl mx-auto animate-fadeIn">
+            <!-- Header Section -->
+            <header class="text-center mb-12">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">Explore Study Programmes</h1>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Discover undergraduate and postgraduate programmes to advance your academic journey and career prospects
+                </p>
+            </header>                <!-- Search and Filters Section -->
+            <div class="bg-white rounded-2xl shadow-soft p-6 mb-10 animate-fadeIn">
+                <form action="" method="GET" class="space-y-6">                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- Search Input -->
+                        <div class="col-span-1 md:col-span-2 lg:col-span-4">
+                            <label for="search" class="block text-sm font-medium text-gray-700 mb-2">
+                                Search Programmes
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-search text-gray-400"></i>
+                                </div>
+                                <input type="text" name="query" id="search" 
+                                       class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg
+                                              focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary
+                                              text-gray-900 placeholder:text-gray-400"
+                                       placeholder="Search programmes by name or keyword"
+                                       value="<?= htmlspecialchars($query ?? '') ?>">
+                            </div>
+                        </div>
+                        
+                        <!-- Programme Level Filter -->
+                        <div>
+                            <label for="level" class="block text-sm font-medium text-gray-700 mb-2">
+                                Programme Level
+                            </label>
+                            <select id="level" name="level" 
+                                    class="block w-full pl-3 pr-10 py-2.5 border border-gray-300 rounded-lg
+                                           focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary
+                                           bg-white">
+                            <option value="">All Levels</option>
+                            <option value="undergraduate" <?= isset($filters['level']) && $filters['level'] === 'undergraduate' ? 'selected' : '' ?>>
+                                Undergraduate
+                            </option>
+                            <option value="postgraduate" <?= isset($filters['level']) && $filters['level'] === 'postgraduate' ? 'selected' : '' ?>>
+                                Postgraduate
+                            </option>
+                        </select>
+                    </div>
 
-        /* Container */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        /* Header */
-        header {
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-
-        header h1 {
-            font-size: 2.5rem;
-            color: #1e293b;
-            margin-bottom: 0.5rem;
-        }
-
-        header p {
-            color: #64748b;
-            font-size: 1.1rem;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        /* Search and Filter Section */
-        .search-filter {
-            background: var(--card-color);
-            padding: 1.5rem;
-            border-radius: 0.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-
-        .search-filter form {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .search-filter .form-group {
-            flex: 1;
-            min-width: 200px;
-        }
-
-        .search-filter label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: #1e293b;
-        }
-
-        .search-filter input, 
-        .search-filter select {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.375rem;
-            font-size: 1rem;
-            color: #1e293b;
-        }
-
-        .search-filter button {
-            padding: 0.75rem 1.5rem;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 500;
-            transition: background-color 0.2s;
-            align-self: flex-end;
-        }
-
-        .search-filter button:hover {
-            background-color: var(--link-hover-color);
-        }
-
-        /* Programmes Grid */
-        .programmes-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 2rem;
-        }
-
-        .programme-card {
-            background-color: var(--card-color);
-            border-radius: 0.5rem;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-
-        .programme-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .programme-image {
-            height: 200px;
-            background-size: cover;
-            background-position: center;
-            background-color: #e2e8f0;
-            position: relative;
-        }
-
-        .programme-level {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background-color: var(--primary-color);
-            color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 2rem;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-
-        .programme-content {
-            padding: 1.5rem;
-        }
-
-        .programme-title {
-            font-size: 1.25rem;
-            color: #1e293b;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
-
-        .programme-description {
-            color: #64748b;
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
-            line-height: 1.6;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }        .programme-meta {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid #e2e8f0;
-        }
-
-        .meta-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            background: #f8fafc;
-            transition: background-color 0.2s;
-        }
-
-        .meta-item:hover {
-            background: #f1f5f9;
-        }
-
-        .meta-item span:first-of-type {
-            color: #1e293b;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-
-        .meta-item .meta-label {
-            color: #64748b;
-            font-size: 0.75rem;
-            margin-top: 0.25rem;
-        }
-
-        .meta-item i {
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-            font-size: 1.25rem;
-        }
-
-        .programme-features {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid #e2e8f0;
-        }
-
-        .feature-badge {
-            padding: 0.25rem 0.75rem;
-            background: #f0f9ff;
-            color: #0369a1;
-            border-radius: 1rem;
-            font-size: 0.75rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-
-        .programme-actions {
-            margin-top: 1rem;
-            display: flex;
-            gap: 1rem;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            text-decoration: none;
-            transition: all 0.2s;
-            cursor: pointer;
-            border: none;
-        }
-
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: white;
-            flex: 1;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--link-hover-color);
-        }
-
-        .btn-secondary {
-            background-color: #e2e8f0;
-            color: #1e293b;
-            flex: 1;
-        }
-
-        .btn-secondary:hover {
-            background-color: #cbd5e1;
-        }
-
-        /* No Results */
-        .no-results {
-            text-align: center;
-            padding: 3rem;
-            background-color: var(--card-color);
-            border-radius: 0.5rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-
-        .no-results i {
-            font-size: 3rem;
-            color: #94a3b8;
-            margin-bottom: 1rem;
-        }
-
-        .no-results h3 {
-            color: #1e293b;
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .no-results p {
-            color: #64748b;
-        }
-
-        /* Responsive Styles */
-        @media (max-width: 768px) {
-            .programmes-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-
-    <div class="container">
-        <header>
-            <h1>Explore Study Programmes</h1>
-            <p>Discover undergraduate and postgraduate programmes to advance your academic journey and career prospects</p>
-        </header>
-
-        <div class="search-filter">
-            <form action="" method="GET">
-                <div class="form-group">
-                    <label for="query">Search Programmes</label>
-                    <input type="text" id="query" name="query" placeholder="e.g., Computer Science, Cyber Security" value="<?= htmlspecialchars($query ?? '') ?>">
-                </div>                <div class="form-group">
-                    <label for="level">Programme Level</label>
-                    <select id="level" name="level">
-                        <option value="">All Levels</option>
-                        <option value="undergraduate" <?= $level === 'undergraduate' ? 'selected' : '' ?>>Undergraduate</option>
-                        <option value="postgraduate" <?= $level === 'postgraduate' ? 'selected' : '' ?>>Postgraduate</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="duration">Duration</label>
-                    <select id="duration" name="duration">
-                        <option value="">Any Duration</option>
-                        <option value="1">1 Year</option>
+                    <!-- Duration Filter -->
+                    <div>
+                        <label for="duration" class="block text-sm font-medium text-gray-700 mb-2">
+                            Duration
+                        </label>
+                        <select id="duration" name="duration"
+                                class="block w-full pl-3 pr-10 py-2.5 border border-gray-300 rounded-lg
+                                       focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary
+                                       bg-white">
+                        <option value="">Any Duration</option>                                    <option value="1">1 Year</option>
                         <option value="2">2 Years</option>
                         <option value="3">3 Years</option>
                         <option value="4">4 Years</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="department">Department</label>
-                    <select id="department" name="department">
-                        <option value="">All Departments</option>
-                        <?php foreach ($result['departments'] as $dept): ?>
+
+                <!-- Department Filter -->
+                <div>
+                    <label for="department" class="block text-sm font-medium text-gray-700 mb-2">
+                        Department
+                    </label>
+                    <select id="department" name="department"
+                            class="block w-full pl-3 pr-10 py-2.5 border border-gray-300 rounded-lg
+                                   focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary
+                                   bg-white">
+                    <option value="">All Departments</option><?php if (isset($departments) && is_array($departments)): ?>
+                        <?php foreach ($departments as $dept): ?>
                             <option value="<?= htmlspecialchars($dept) ?>"><?= htmlspecialchars($dept) ?></option>
-                        <?php endforeach; ?>
+                        <?php endforeach; ?>                            <?php endif; ?>
                     </select>
                 </div>
-                <button type="submit">
-                    <i class="fas fa-search"></i> Search
+                
+                <div class="col-span-1 md:col-span-2 lg:col-span-4 flex justify-end">
+                    <button type="submit" 
+                            class="px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors duration-200">
+                        <i class="fas fa-search mr-2"></i> Search
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>        <?php if (empty($programmes)): ?>
+        <div class="text-center py-16 bg-white rounded-2xl shadow-soft animate-fadeIn">
+            <div class="max-w-md mx-auto">
+                <i class="fas fa-search text-6xl text-primary/20 mb-6"></i>
+                <h3 class="text-2xl font-semibold text-gray-800 mb-3">No programmes found</h3>
+                <p class="text-gray-600 mb-6">Try adjusting your search criteria or explore all available programmes</p>
+                <button onclick="window.location.href='?'" 
+                        class="px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-200">
+                    View All Programmes
                 </button>
-            </form>
-        </div>
-
-        <?php if (empty($programmes)): ?>
-            <div class="no-results">
-                <i class="fas fa-search"></i>
-                <h3>No programmes found</h3>
-                <p>Try adjusting your search criteria or explore all available programmes</p>
             </div>
-        <?php else: ?>
-            <div class="programmes-grid">
-                <?php foreach ($programmes as $programme): ?>
-                    <div class="programme-card">
-                        <div class="programme-image" style="background-image: url('<?= htmlspecialchars($programme['image_url'] ?? '/assets/images/default-programme.jpg') ?>')">
-                            <span class="programme-level">
-                                <?= ucfirst(htmlspecialchars($programme['level'] ?? 'undergraduate')) ?>
-                            </span>
-                        </div>
-                        <div class="programme-content">
-                            <h3 class="programme-title"><?= htmlspecialchars($programme['title']) ?></h3>
-                            <p class="programme-description">
-                                <?= htmlspecialchars($programme['description'] ?? 'No description available') ?>
-                            </p>                            <div class="programme-meta">
-                                <div class="meta-item">
-                                    <i class="fas fa-book"></i>
-                                    <span><?= ($programme['module_count'] ?? 0) ?> Modules</span>
-                                    <span class="meta-label">Total Modules</span>
-                                </div>
-                                <div class="meta-item">
-                                    <i class="fas fa-clock"></i>
-                                    <span><?= htmlspecialchars($programme['duration_years'] ?? '3') ?> Years</span>
-                                    <span class="meta-label">Duration</span>
-                                </div>
-                                <div class="meta-item">
-                                    <i class="fas fa-graduation-cap"></i>
-                                    <span><?= htmlspecialchars($programme['qualification'] ?? 'Degree') ?></span>
-                                    <span class="meta-label">Qualification</span>
-                                </div>
-                                <div class="meta-item">
-                                    <i class="fas fa-users"></i>
-                                    <span><?= ($programme['staff_count'] ?? 0) ?> Staff</span>
-                                    <span class="meta-label">Teaching Staff</span>
-                                </div>
-                                <?php if (!empty($programme['department'])): ?>
-                                <div class="meta-item">
-                                    <i class="fas fa-university"></i>
-                                    <span><?= htmlspecialchars($programme['department']) ?></span>
-                                    <span class="meta-label">Department</span>
-                                </div>
-                                <?php endif; ?>
-                            </div>
-                            <?php if (!empty($programme['key_features'])): ?>
-                            <div class="programme-features">
-                                <?php foreach ($programme['key_features'] as $feature): ?>
-                                    <span class="feature-badge"><?= htmlspecialchars($feature) ?></span>
-                                <?php endforeach; ?>
-                            </div>
-                            <?php endif; ?>
-                            <div class="programme-actions">                            <a href="<?= BASE_URL ?>/student/programme_details?id=<?= $programme['id'] ?>" class="btn btn-primary">
-                                <i class="fas fa-info-circle"></i> View Details
-                            </a>
-                            <?php if (isset($_SESSION['user_id'])): ?>
-                                <?php if (!isset($programme['interest_registered'])): ?>
-                                    <a href="<?= BASE_URL ?>/student/register_interest.php?id=<?= $programme['id'] ?>" class="btn btn-secondary">
-                                        <i class="far fa-bookmark"></i> Register Interest
-                                    </a>
-                                <?php else: ?>
-                                    <a href="<?= BASE_URL ?>/student/manage_interests.php" class="btn btn-secondary active">
-                                        <i class="fas fa-bookmark"></i> Registered
-                                    </a>
-                                <?php endif; ?>
-                            <?php endif; ?>
-                            </div>
-                        </div>
+        </div><?php else: ?>            <!-- Programmes Grid -->            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-fadeIn">
+            <?php foreach ($programmes as $programme): ?>
+                <div class="programme-card group bg-white rounded-2xl shadow-soft overflow-hidden">
+                    <!-- Programme Image -->
+                    <div class="h-48 bg-cover bg-center relative" 
+                         style="background-image: url('<?= htmlspecialchars($programme['image_url'] ?? '/assets/images/default-programme.jpg') ?>')">
+                        <div class="absolute inset-0 bg-black bg-opacity-40 transition-opacity group-hover:bg-opacity-30"></div>
+                        <span class="absolute top-4 right-4 bg-primary text-white px-4 py-1.5 rounded-full text-sm font-semibold shadow-sm">
+                            <?= ucfirst(htmlspecialchars($programme['level'] ?? 'undergraduate')) ?>
+                        </span>
                     </div>
-                <?php endforeach; ?>
+                    
+                    <!-- Programme Details -->
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-primary transition-colors">
+                            <?= htmlspecialchars($programme['title']) ?>
+                        </h3>
+                        <p class="text-gray-600 text-sm line-clamp-3 mb-4">
+                            <?= htmlspecialchars($programme['description'] ?? 'No description available') ?>
+                        </p>                            <!-- Programme Stats -->
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div class="bg-gray-50 p-4 rounded-lg text-center transition-all duration-200 hover:bg-gray-100 hover:-translate-y-0.5">
+                                <i class="fas fa-book text-primary text-xl mb-2"></i>
+                                <span class="block text-sm font-semibold text-gray-900"><?= ($programme['module_count'] ?? 0) ?> Modules</span>
+                                <span class="text-xs text-gray-500">Total Modules</span>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg text-center transition-all duration-200 hover:bg-gray-100 hover:-translate-y-0.5">                                    <i class="fas fa-clock text-primary text-xl mb-2"></i>
+                                <span class="block text-sm font-semibold text-gray-900"><?= htmlspecialchars($programme['duration'] ?? '3 Years') ?></span>
+                                <span class="text-xs text-gray-500">Duration</span>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg text-center transition-all duration-200 hover:bg-gray-100 hover:-translate-y-0.5">
+                                <i class="fas fa-graduation-cap text-primary text-xl mb-2"></i>
+                                <span class="block text-sm font-semibold text-gray-900"><?= htmlspecialchars($programme['qualification'] ?? 'Degree') ?></span>
+                                <span class="text-xs text-gray-500">Qualification</span>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg text-center transition-all duration-200 hover:bg-gray-100 hover:-translate-y-0.5">
+                                <i class="fas fa-users text-primary text-xl mb-2"></i>
+                                <span class="block text-sm font-semibold text-gray-900"><?= ($programme['staff_count'] ?? 0) ?> Staff</span>
+                                <span class="text-xs text-gray-500">Teaching Staff</span>
+                            </div>                                <?php if (!empty($programme['department'])): ?>
+                            <div class="col-span-2 bg-gray-50 p-4 rounded-lg text-center transition-all duration-200 hover:bg-gray-100 hover:-translate-y-0.5">
+                                <i class="fas fa-university text-primary text-xl mb-2"></i>
+                                <span class="block text-sm font-semibold text-gray-900"><?= htmlspecialchars($programme['department']) ?></span>
+                                <span class="text-xs text-gray-500">Department</span>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- Programme Features -->
+                        <?php if (!empty($programme['key_features'])): ?>
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            <?php foreach ($programme['key_features'] as $feature): ?>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                                    <?= htmlspecialchars($feature) ?>
+                                </span>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php endif; ?>
+
+                        <!-- Action Buttons -->
+                        <div class="flex gap-4 mt-auto">
+                            <a href="<?= BASE_URL ?>/student/programme_details?id=<?= $programme['id'] ?>" 
+                               class="flex-1 inline-flex justify-center items-center px-4 py-2.5 bg-primary text-white rounded-lg
+                                      hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2
+                                      transition-all duration-200 font-medium">
+                                <i class="fas fa-info-circle mr-2"></i> View Details
+                            </a>                            <?php if (isset($_SESSION['user_id'])): ?>
+                            <button data-programme-id="<?= $programme['id'] ?>" 
+                                    data-action="<?= isset($programme['interest_registered']) ? 'withdraw' : 'register' ?>"
+                                    class="flex-1 inline-flex justify-center items-center px-4 py-2.5 
+                                           <?= isset($programme['interest_registered']) 
+                                               ? 'bg-red-100 text-red-700 hover:bg-red-200' 
+                                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200' ?> 
+                                           rounded-lg font-medium
+                                           focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 
+                                           transition-all duration-200">
+                            <i class="<?= isset($programme['interest_registered']) ? 'fas' : 'far' ?> fa-bookmark mr-2"></i>
+                            <?= isset($programme['interest_registered']) ? 'Withdraw Interest' : 'Register Interest' ?>
+                        </button>
+                    <?php else: ?>
+                        <a href="<?= BASE_URL ?>/auth/login?redirect=<?= urlencode(BASE_URL . '/student/explore_programmes') ?>" 
+                           class="flex-1 inline-flex justify-center items-center px-4 py-2.5 
+                                  bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-medium
+                                  focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 
+                                  transition-all duration-200">
+                            <i class="far fa-bookmark mr-2"></i> Login to Register
+                        </a>                                <?php endif; ?>
+                    </div>
+                </div>
             </div>
-        <?php endif; ?>
+        <?php endforeach; ?>
     </div>
-</main>
-    </div>
+<?php endif; ?>
+        </div>
+    </main>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Debounce function definition
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    // Function to attach interest button listeners
+    function attachInterestButtonListeners() {
+        const interestButtons = document.querySelectorAll('button[data-programme-id]');
+        interestButtons.forEach(button => {
+            button.addEventListener('click', async function(e) {
+                e.preventDefault();
+                const programmeId = this.dataset.programmeId;
+                const currentAction = this.dataset.action;
+                const isRegistering = currentAction === 'register';
+                
+                try {
+                    const response = await fetch('<?= BASE_URL ?>/student/register_interest_api.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            programme_id: programmeId,
+                            action: currentAction
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok && data.success) {
+                        alert(isRegistering ? 'Successfully registered interest!' : 'Successfully withdrawn interest!');
+                        
+                        this.dataset.action = isRegistering ? 'withdraw' : 'register';
+                        this.innerHTML = `
+                            <i class="${isRegistering ? 'fas' : 'far'} fa-bookmark mr-2"></i>
+                            ${isRegistering ? 'Withdraw Interest' : 'Register Interest'}
+                        `;
+                        this.className = `flex-1 inline-flex justify-center items-center px-4 py-2.5 ${
+                            isRegistering ? 
+                            'bg-red-100 text-red-700 hover:bg-red-200' : 
+                            'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        } rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200`;
+                    } else {
+                        throw new Error(data.error || 'Failed to process request');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Failed to process request. Please try again later.');
+                }
+            });
+        });
+    }
+
+    // Initial attachment of interest button listeners
+    attachInterestButtonListeners();
+
+    // Search and filter functionality
+    const searchInput = document.getElementById('search');
+    const levelSelect = document.getElementById('level');
+    const durationSelect = document.getElementById('duration');
+    const departmentSelect = document.getElementById('department');
+    const form = document.querySelector('form');
+    const programmesContainer = document.querySelector('.grid');
+
+    // Function to handle form submission via AJAX
+    async function handleFilters() {
+        // Show loading state
+        if (programmesContainer) {
+            programmesContainer.style.opacity = '0.5';
+        }
+
+        const formData = new FormData(form);
+        const params = new URLSearchParams(formData);
+        
+        try {
+            const response = await fetch(`${window.location.pathname}?${params.toString()}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            
+            const html = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newGrid = doc.querySelector('.grid');
+            
+            if (newGrid && programmesContainer) {
+                programmesContainer.innerHTML = newGrid.innerHTML;
+                // Reattach event listeners to the new content
+                attachInterestButtonListeners();
+            }
+            
+            // Update URL without reloading
+            window.history.pushState({}, '', `${window.location.pathname}?${params.toString()}`);
+            
+        } catch (error) {
+            console.error('Error:', error);
+        } finally {
+            // Remove loading state
+            if (programmesContainer) {
+                programmesContainer.style.opacity = '1';
+            }
+        }
+    }
+
+    // Add event listeners for real-time filtering
+    searchInput.addEventListener('input', debounce(handleFilters, 300));
+    levelSelect.addEventListener('change', handleFilters);
+    durationSelect.addEventListener('change', handleFilters);
+    departmentSelect.addEventListener('change', handleFilters);
+    
+    // Prevent form submission and handle it via AJAX
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        handleFilters();
+    });
+});
+</script>
 </body>
 </html>

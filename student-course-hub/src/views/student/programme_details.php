@@ -1,817 +1,345 @@
 <?php
-require_once __DIR__ . '/../../controllers/StudentController.php';
-use App\Controllers\StudentController;
-
-// Check if programme ID is provided
-if (!isset($_GET['id']) || empty($_GET['id'])) {    header('Location: /student-course-hub/student/explore_programmes.php');
-    exit;
-}
-
-$programmeId = (int)$_GET['id'];
-$studentId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
-
-$studentController = new StudentController();
-
-try {
-    // Get programme details with structure
-    $programmeData = $studentController->getProgrammeStructure($programmeId);
-    
-    // Extract programme details and structure
-    $programme = $programmeData['programme'];
-    $structure = $programmeData['structure'];
-    $totalCredits = $programmeData['total_credits'];
-    
-    // Check if student has registered interest
-    $hasInterest = false;
-    if ($studentId) {
-        $hasInterest = $studentController->student->hasInterest($studentId, $programmeId);
-    }
-    
-    // Get programme staff members
-    $staffMembers = $studentController->programme->getStaffMembers($programmeId);
-    
-    $pageTitle = "Programme Details: " . htmlspecialchars($programme['title']);
-} catch (Exception $e) {
-    // Handle errors
-    $error = $e->getMessage();
-    $pageTitle = "Programme Details";
-}
-
-require_once '../layouts/header.php';
+$pageTitle = htmlspecialchars($programme['title'] ?? 'Programme Details');
+require_once __DIR__ . '/../layouts/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($pageTitle); ?> - Course Hub</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <style>
-        :root {
-            --primary-color: #3b82f6;
-            --secondary-color: #4CAF50;
-            --error-color: #ef4444;
-            --link-color: #2563eb;
-            --link-hover-color: #1d4ed8;
-            --bg-color: #f1f5f9;
-            --card-color: #ffffff;
-        }
 
-        /* Navigation Bar */
-        .nav-back {
-            margin-bottom: 2rem;
-        }
+<!-- Load Tailwind and FontAwesome -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-        .nav-back a {
-            display: inline-flex;
-            align-items: center;
-            color: var(--link-color);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-
-        .nav-back a:hover {
-            color: var(--link-hover-color);
-        }
-
-        .nav-back i {
-            margin-right: 0.5rem;
-        }
-        
-        /* Programme Banner */
-        .programme-banner {
-            height: 250px;
-            background-size: cover;
-            background-position: center;
-            position: relative;
-        }
-
-        .programme-header {
-            background: #fff;
-            padding: 0;
-            border-radius: 0.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            overflow: hidden;
-        }
-        
-        .programme-info {
-            padding: 2rem;
-        }
-
-        .programme-title {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1rem;
-        }
-
-        .programme-title h1 {
-            font-size: 1.8rem;
-            color: #1e293b;
-            margin: 0;
-        }
-
-        .programme-level {
-            font-size: 0.875rem;
-            padding: 0.25rem 0.75rem;
-            border-radius: 1rem;
-            background: var(--primary-color);
-            color: white;
-            text-transform: capitalize;
-        }
-
-        .programme-meta {
-            display: flex;
-            gap: 2rem;
-            margin-bottom: 1rem;
-        }
-
-        .meta-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #64748b;
-            font-size: 0.875rem;
-        }
-
-        .programme-description {
-            color: #475569;
-            line-height: 1.6;
-        }        .programme-content {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 2rem;
-        }
-
-        .programme-modules {
-            background: #fff;
-            padding: 2rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        
-        .year-tabs {
-            display: flex;
-            margin-bottom: 1rem;
-            border-bottom: 1px solid #e2e8f0;
-            overflow-x: auto;
-            padding-bottom: 0.5rem;
-            gap: 0.5rem;
-        }
-
-        .year-tab {
-            padding: 0.5rem 1rem;
-            background-color: #e2e8f0;
-            border-radius: 0.375rem;
-            color: #1e293b;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: none;
-            white-space: nowrap;
-        }
-
-        .year-tab:hover {
-            background-color: #cbd5e1;
-        }
-
-        .year-tab.active {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .year-content {
-            display: none;
-        }
-
-        .year-content.active {
-            display: block;
-        }
-
-        .year-modules {
-            margin-bottom: 2rem;
-        }
-
-        .year-modules h3 {
-            color: #1e293b;
-            font-size: 1.25rem;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #e2e8f0;
-        }
-
-        .module-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .module-card {
-            background: #fff;
-            border-radius: 0.5rem;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .module-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        .module-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1rem;
-        }
-
-        .module-title-group {
-            flex: 1;
-        }
-
-        .module-name {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #1e293b;
-            display: block;
-            margin-bottom: 0.25rem;
-        }
-
-        .module-code {
-            font-size: 0.875rem;
-            color: #64748b;
-        }
-
-        .module-credits {
-            background: #f0f9ff;
-            color: #0369a1;
-            padding: 0.25rem 0.75rem;
-            border-radius: 1rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-
-        .module-body {
-            border-top: 1px solid #e2e8f0;
-            padding-top: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .module-description {
-            color: #475569;
-            font-size: 0.9rem;
-            line-height: 1.6;
-            margin-bottom: 1rem;
-        }
-
-        .module-staff {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem;
-            background: #f8fafc;
-            border-radius: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .staff-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            overflow: hidden;
-            background: #e2e8f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .staff-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .staff-info {
-            flex: 1;
-        }
-
-        .staff-name {
-            font-weight: 600;
-            color: #1e293b;
-            display: block;
-            margin-bottom: 0.25rem;
-        }
-
-        .staff-title {
-            font-size: 0.875rem;
-            color: #64748b;
-            display: block;
-        }
-
-        .staff-expertise {
-            font-size: 0.75rem;
-            color: var(--primary-color);
-            display: block;
-            margin-top: 0.25rem;
-        }
-
-        .module-prerequisites {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-            color: #64748b;
-            margin-top: 0.5rem;
-        }
-
-        .btn-module-details {
-            width: 100%;
-            padding: 0.75rem;
-            background: transparent;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.375rem;
-            color: #1e293b;
-            font-size: 0.875rem;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-module-details:hover {
-            background: #f8fafc;
-            border-color: #cbd5e1;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .module-stats {
-            display: flex;
-            gap: 2rem;
-        }
-
-        .stat {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--primary-color);
-            font-size: 1rem;
-            font-weight: 500;
-        }
-
-        .stat i {
-            font-size: 1.25rem;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 3rem 2rem;
-            background: #f8fafc;
-            border-radius: 0.5rem;
-            color: #64748b;
-        }
-
-        .empty-state i {
-            font-size: 2rem;
-            color: #94a3b8;
-            margin-bottom: 1rem;
-        }
-
-        .module-meta-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .meta-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            padding: 1rem;
-            background: #f8fafc;
-            border-radius: 0.5rem;
-            transition: all 0.2s ease;
-        }
-
-        .meta-box:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-
-        .meta-box i {
-            font-size: 1.5rem;
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-        }
-
-        .meta-box span:first-of-type {
-            font-weight: 600;
-            color: #1e293b;
-        }
-
-        .meta-box .meta-label {
-            font-size: 0.75rem;
-            color: #64748b;
-            margin-top: 0.25rem;
-        }
-
-        .module-staff {
-            margin-top: 1.5rem;
-            border-top: 1px solid #e2e8f0;
-            padding-top: 1.5rem;
-        }
-
-        .module-staff h4 {
-            font-size: 1rem;
-            color: #1e293b;
-            margin-bottom: 1rem;
-        }
-
-        .staff-card {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem;
-            background: #f8fafc;
-            border-radius: 0.5rem;
-            margin-bottom: 0.75rem;
-            transition: all 0.2s ease;
-        }
-
-        .staff-card:hover {
-            background: #f1f5f9;
-        }
-
-        @media (max-width: 768px) {
-            .programme-content {
-                grid-template-columns: 1fr;
-            }
-
-            .programme-meta {
-                flex-direction: column;
-                gap: 1rem;
-            }
-        }
-    </style>
-</head>
-<body>    <div class="container">
-        <div class="nav-back">
-            <a href="explore_programmes.php"><i class="fas fa-arrow-left"></i> Back to Programmes</a>
+<div class="min-h-screen bg-gray-50">
+    <?php require_once __DIR__ . '/../layouts/student_sidebar_new.php'; ?>
+      <main class="lg:ml-64 p-4 sm:p-6 lg:p-8">
+        <!-- Back Button -->
+        <div class="mb-6">
+            <a href="<?= BASE_URL ?>/student/explore_programmes" 
+               class="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Back to Programmes
+            </a>
         </div>
         
-        <?php if (isset($error)): ?>
-            <div class="error-message">
-                <i class="fas fa-exclamation-circle"></i>
-                <?= htmlspecialchars($error) ?>
-            </div>
-        <?php elseif (isset($programme)): ?>
-            <!-- Programme Header -->
-            <div class="programme-header">
-                <div class="programme-banner" style="background-image: url('<?= htmlspecialchars($programme['image_url'] ?? '/assets/images/default-programme.jpg') ?>')">
-                    <span class="programme-level">
-                        <?= ucfirst(htmlspecialchars($programme['level'] ?? 'undergraduate')) ?>
-                    </span>
+        <div class="programme-details">
+        <!-- Programme Header -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="relative h-80">
+                <img src="<?= htmlspecialchars($programme['image_url']) ?>" alt="<?= htmlspecialchars($programme['title']) ?>" 
+                     class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-black/20 flex items-end">
+                    <div class="p-8 text-white w-full">
+                        <h1 class="text-4xl font-bold mb-3"><?= htmlspecialchars($programme['title']) ?></h1>
+                        <p class="text-xl opacity-90"><?= ucfirst(htmlspecialchars($programme['level'])) ?> Programme</p>
+                    </div>
                 </div>
-                <div class="programme-info">
-                    <h1 class="programme-title"><?= htmlspecialchars($programme['title']) ?></h1>
-                    
-                    <div class="programme-meta">
-                        <div class="meta-item">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span>Duration: <?= htmlspecialchars($programme['duration_years'] ?? '3') ?> Years</span>
-                        </div>
-                        <div class="meta-item">
-                            <i class="fas fa-book"></i>
-                            <span><?= $programme['module_count'] ?? 0 ?> Modules</span>
-                        </div>
-                        <div class="meta-item">
-                            <i class="fas fa-graduation-cap"></i>
-                            <span><?= $totalCredits ?? 0 ?> Total Credits</span>
-                        </div>
+            </div>
+
+            <!-- Programme Stats -->            <div class="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-200 bg-white">
+                <div class="p-6 text-center">
+                    <div class="flex items-center justify-center text-indigo-600 mb-2">
+                        <i class="fas fa-clock text-2xl"></i>
                     </div>
-                    
-                    <div class="programme-description">
-                        <?= nl2br(htmlspecialchars($programme['description'] ?? 'No description available')) ?>
+                    <div class="text-2xl font-bold text-gray-900 mb-1">
+                        <?= isset($programme['duration']) && $programme['duration'] ? htmlspecialchars($programme['duration']) . ' Years' : 'Full-time' ?>
                     </div>
-                    
-                    <div class="programme-actions">
-                        <?php if ($studentId): ?>
-                            <?php if ($hasInterest): ?>
-                                <form action="withdraw_interest.php" method="POST">
-                                    <input type="hidden" name="programme_id" value="<?= $programmeId ?>">
-                                    <button type="submit" class="btn btn-danger">
-                                        <i class="fas fa-bookmark"></i> Remove Interest
-                                    </button>
-                                </form>
-                            <?php else: ?>
-                                <form action="register_interest.php" method="POST">
-                                    <input type="hidden" name="programme_id" value="<?= $programmeId ?>">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="far fa-bookmark"></i> Register Interest
-                                    </button>
-                                </form>
-                            <?php endif; ?>
-                            <a href="manage_interests.php" class="btn btn-outline">
-                                <i class="fas fa-list"></i> Manage Interests
-                            </a>
+                    <div class="text-sm text-gray-500">Duration</div>
+                </div>
+                <div class="p-6 text-center">
+                    <div class="flex items-center justify-center text-indigo-600 mb-2">
+                        <i class="fas fa-graduation-cap text-2xl"></i>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-900 mb-1">
+                        <?= isset($programme['level']) ? (strtolower($programme['level']) === 'undergraduate' ? 'Bachelor\'s' : 'Master\'s') : 'Degree' ?>
+                    </div>
+                    <div class="text-sm text-gray-500">Qualification</div>
+                </div>
+                <div class="p-6 text-center">
+                    <div class="flex items-center justify-center text-indigo-600 mb-2">
+                        <i class="fas fa-users text-2xl"></i>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-900 mb-1">
+                        <?= isset($programme['staff_count']) ? htmlspecialchars($programme['staff_count']) : '0' ?>
+                    </div>
+                    <div class="text-sm text-gray-500">Teaching Staff</div>
+                </div>
+            </div>
+            
+            <div class="programme-actions p-6 bg-gray-50 border-t border-gray-200">
+                    <?php if ($studentId): ?>                        <?php if ($hasInterest): ?>
+                            <form action="withdraw_interest.php" method="POST" class="inline">
+                                <input type="hidden" name="programme_id" value="<?= htmlspecialchars($programme['id'] ?? '') ?>">
+                                <button type="submit" 
+                                        class="w-full sm:w-auto px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-sm transition duration-150 ease-in-out flex items-center justify-center gap-2 disabled:opacity-50"
+                                        id="withdrawBtn">
+                                    <i class="fas fa-bookmark"></i> 
+                                    <span>Withdraw Interest</span>
+                                </button>
+                            </form>
                         <?php else: ?>
-                            <a href="<?= BASE_URL ?>/auth/login?redirect=<?= BASE_URL ?>/student/programme_details?id=<?= $programmeId ?>" class="btn btn-primary">
-                                <i class="fas fa-sign-in-alt"></i> Login to Register Interest
-                            </a>
+                            <button onclick="registerInterest(<?= htmlspecialchars($programme['id'] ?? '') ?>)" 
+                                    class="w-full sm:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm transition duration-150 ease-in-out flex items-center justify-center gap-2 disabled:opacity-50"
+                                    id="registerBtn">
+                                <i class="far fa-bookmark"></i> 
+                                <span>Register Interest</span>
+                            </button>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <a href="<?= htmlspecialchars(BASE_URL) ?>/auth/login" 
+                           class="w-full sm:w-auto px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-sm transition duration-150 ease-in-out flex items-center justify-center gap-2">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span>Login to Register Interest</span>
+                        </a>
+                    <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Programme Details -->
+        <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Main Content -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Description -->
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h2 class="text-2xl font-bold mb-4">About the Programme</h2>
+                    <div class="prose max-w-none">
+                        <?= nl2br(htmlspecialchars($programme['description'])) ?>
+                    </div>
+                </div>                <!-- Modules -->
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h2 class="text-2xl font-bold mb-4">Programme Modules</h2>
+                    <?php 
+                    $modules = $programme['modules'] ?? [];
+                    if (!empty($modules)): ?>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <?php foreach ($modules as $module): ?>
+                                <div class="relative group">
+                                    <div class="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition duration-150 ease-in-out">
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                                            <?= htmlspecialchars($module['title'] ?? 'Untitled Module') ?>
+                                        </h3>
+                                        <div class="text-sm text-gray-500 space-y-2">
+                                            <p class="flex items-center gap-2">
+                                                <i class="fas fa-calendar text-indigo-600"></i>
+                                                Year <?= htmlspecialchars($module['year_of_study'] ?? 'N/A') ?>
+                                            </p>
+                                            <?php if (isset($module['staff_name'])): ?>
+                                            <p class="flex items-center gap-2">
+                                                <i class="fas fa-user text-indigo-600"></i>
+                                                <?= htmlspecialchars($module['staff_name']) ?>
+                                            </p>
+                                            <?php endif; ?>
+                                            <?php if (isset($module['credits'])): ?>
+                                            <p class="flex items-center gap-2">
+                                                <i class="fas fa-star text-indigo-600"></i>
+                                                <?= htmlspecialchars($module['credits']) ?> Credits
+                                            </p>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="text-center py-8 text-gray-500">
+                            <div class="mb-4 text-4xl">
+                                <i class="fas fa-book-open"></i>
+                            </div>
+                            <p>No modules are currently available for this programme.</p>
+                        </div>
+                    <?php endif; ?>
+                        <?php foreach ($modules as $module): ?>
+                        <div class="border rounded-lg p-4">
+                            <div class="h-32 mb-4">
+                                <img src="<?= htmlspecialchars($module['image_url']) ?>" 
+                                     alt="<?= htmlspecialchars($module['title']) ?>"
+                                     class="w-full h-full object-cover rounded">
+                            </div>
+                            <h3 class="font-bold text-lg mb-2"><?= htmlspecialchars($module['title']) ?></h3>
+                            <p class="text-gray-600 mb-2"><?= htmlspecialchars($module['description'] ?? '') ?></p>
+                            <div class="text-sm text-gray-500">
+                                <span class="mr-4">
+                                    <i class="fas fa-award"></i> <?= htmlspecialchars($module['credits']) ?> Credits
+                                </span>
+                                <span>
+                                    <i class="fas fa-calendar"></i> Year <?= htmlspecialchars($module['year_of_study']) ?>
+                                </span>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-8">
+                <!-- Shared Modules -->
+                <?php if (!empty($sharedModules)): ?>
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h2 class="text-xl font-bold mb-4">Shared Modules</h2>
+                    <div class="space-y-4">
+                        <?php foreach ($sharedModules as $module): ?>
+                        <div class="border-b pb-4 last:border-b-0 last:pb-0">
+                            <h3 class="font-bold mb-2"><?= htmlspecialchars($module['title']) ?></h3>
+                            <p class="text-sm text-gray-600 mb-2">Shared with:</p>
+                            <ul class="text-sm text-gray-500">
+                                <?php foreach ($module['shared_with'] as $prog): ?>
+                                <li class="flex items-center">
+                                    <i class="fas fa-share-alt mr-2"></i>
+                                    <a href="?id=<?= $prog['id'] ?>" class="hover:text-blue-500">
+                                        <?= htmlspecialchars($prog['title']) ?>
+                                    </a>
+                                </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <!-- Key Information -->
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h2 class="text-xl font-bold mb-4">Key Information</h2>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">Department</span>
+                            <span class="font-medium"><?= htmlspecialchars($programme['department']) ?></span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">Level</span>
+                            <span class="font-medium"><?= htmlspecialchars($programme['level']) ?></span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">Duration</span>
+                            <span class="font-medium"><?= htmlspecialchars($programme['duration']) ?></span>
+                        </div>
+                        <?php if (isset($programme['start_date'])): ?>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">Start Date</span>
+                            <span class="font-medium"><?= htmlspecialchars($programme['start_date']) ?></span>
+                        </div>
                         <?php endif; ?>
                     </div>
                 </div>
             </div>
-
-            <div class="programme-content">                <!-- Modules Section -->
-                <div class="programme-modules" id="modules">
-                    <div class="section-header">
-                        <h2>Programme Structure</h2>
-                        <div class="module-stats">
-                            <div class="stat">
-                                <i class="fas fa-book"></i>
-                                <span><?= array_sum(array_map(function($year) { return array_sum(array_map('count', $year)); }, $structure ?? [])) ?> Total Modules</span>
-                            </div>
-                            <div class="stat">
-                                <i class="fas fa-graduation-cap"></i>
-                                <span><?= $totalCredits ?> Credits</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <?php if (empty($structure)): ?>
-                        <div class="empty-state">
-                            <i class="fas fa-info-circle"></i>
-                            <p>No structure information available for this programme yet.</p>
-                        </div>
-                    <?php else: ?>
-                        <div class="year-tabs">
-                            <?php foreach ($structure as $yearNum => $yearData): ?>
-                                <button class="year-tab <?= $yearNum === array_key_first($structure) ? 'active' : '' ?>" 
-                                        onclick="showYear(<?= $yearNum ?>)">
-                                    Year <?= $yearNum ?>
-                                </button>
-                            <?php endforeach; ?>
-                        </div>
-                        
-                        <?php foreach ($structure as $yearNum => $yearData): ?>
-                            <div class="year-content <?= $yearNum === array_key_first($structure) ? 'active' : '' ?>" id="year-<?= $yearNum ?>">
-                                <?php foreach ($yearData as $semesterNum => $modules): ?>
-                                    <div class="year-modules">
-                                        <h3>Semester <?= $semesterNum ?></h3>
-                                        <div class="module-list">
-                                            <?php foreach ($modules as $module): ?>                                            <div class="module-card" data-module="<?= htmlspecialchars(json_encode($module)) ?>">
-                                                    <div class="module-header">
-                                                        <div class="module-title-group">
-                                                            <span class="module-name"><?= htmlspecialchars($module['title']) ?></span>
-                                                            <span class="module-code"><?= htmlspecialchars($module['code'] ?? 'N/A') ?></span>
-                                                        </div>
-                                                        <span class="module-credits"><?= $module['credits'] ?> Credits</span>
-                                                    </div>                                                    <div class="module-body">
-                                                        <div class="module-description">
-                                                            <?= htmlspecialchars($module['description'] ?? 'No description available') ?>
-                                                        </div>
-                                                        <div class="module-meta">
-                                                            <div class="module-meta-grid">
-                                                                <div class="meta-box">
-                                                                    <i class="fas fa-graduation-cap"></i>
-                                                                    <span><?= $module['credits'] ?> Credits</span>
-                                                                    <span class="meta-label">Required Credits</span>
-                                                                </div>
-                                                                <div class="meta-box">
-                                                                    <i class="fas fa-calendar-alt"></i>
-                                                                    <span>Year <?= $yearNum ?>, Semester <?= $semesterNum ?></span>
-                                                                    <span class="meta-label">Study Period</span>
-                                                                </div>
-                                                                <?php if (!empty($module['assessment_method'])): ?>
-                                                                <div class="meta-box">
-                                                                    <i class="fas fa-tasks"></i>
-                                                                    <span><?= htmlspecialchars($module['assessment_method']) ?></span>
-                                                                    <span class="meta-label">Assessment Method</span>
-                                                                </div>
-                                                                <?php endif; ?>
-                                                            </div>
-
-                                                            <?php if (!empty($module['staff'])): ?>
-                                                                <div class="module-staff">
-                                                                    <h4>Teaching Staff</h4>
-                                                                    <?php foreach ($module['staff'] as $staffMember): ?>
-                                                                        <div class="staff-card">
-                                                                            <div class="staff-avatar">
-                                                                                <?php if (!empty($staffMember['avatar_url'])): ?>
-                                                                                    <img src="<?= htmlspecialchars($staffMember['avatar_url']) ?>" 
-                                                                                         alt="<?= htmlspecialchars($staffMember['name']) ?>">
-                                                                                <?php else: ?>
-                                                                                    <i class="fas fa-user"></i>
-                                                                                <?php endif; ?>
-                                                                            </div>
-                                                                            <div class="staff-info">
-                                                                                <span class="staff-name"><?= htmlspecialchars($staffMember['name']) ?></span>
-                                                                                <span class="staff-title"><?= htmlspecialchars($staffMember['title'] ?? 'Module Leader') ?></span>
-                                                                                <?php if (!empty($staffMember['expertise'])): ?>
-                                                                                    <span class="staff-expertise"><?= htmlspecialchars($staffMember['expertise']) ?></span>
-                                                                                <?php endif; ?>
-                                                                            </div>
-                                                                        </div>
-                                                                    <?php endforeach; ?>
-                                                                </div>
-                                                            <?php else: ?>
-                                                                <div class="module-staff">
-                                                                    <div class="staff-card">
-                                                                        <div class="staff-avatar">
-                                                                            <i class="fas fa-user"></i>
-                                                                        </div>
-                                                                        <div class="staff-info">
-                                                                            <span class="staff-name">To Be Assigned</span>
-                                                                            <span class="staff-title">Module Leader</span>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            <?php endif; ?>
-                                                            <?php if (!empty($module['prerequisites'])): ?>
-                                                                <div class="module-prerequisites">
-                                                                    <i class="fas fa-link"></i>
-                                                                    <span>Prerequisites: <?= htmlspecialchars(implode(', ', array_column($module['prerequisites'], 'title'))) ?></span>
-                                                                </div>
-                                                            <?php endif; ?>
-                                                        </div>
-                                                    </div>
-                                                    <button class="btn btn-module-details" onclick="showModuleDetails(<?= htmlspecialchars(json_encode($module)) ?>)">
-                                                        <i class="fas fa-info-circle"></i> View Details
-                                                    </button>
-                                                </div>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-                
-                <!-- Sidebar -->
-                <div class="programme-sidebar">
-                    <!-- Teaching Staff Section -->
-                    <div class="staff-section">
-                        <h2>Teaching Staff</h2>
-                        <div class="staff-list">
-                            <?php if (empty($staffMembers)): ?>
-                                <p>No staff information available yet.</p>
-                            <?php else: ?>
-                                <?php foreach ($staffMembers as $staff): ?>
-                            <div class="staff-card">
-                                <div class="staff-avatar">
-                                    <?php if (!empty($staff['avatar_url'])): ?>
-                                        <img src="<?php echo htmlspecialchars($staff['avatar_url']); ?>" alt="<?php echo htmlspecialchars($staff['name']); ?>">
-                                    <?php else: ?>
-                                        <i class="fas fa-user"></i>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="staff-info">
-                                    <div class="staff-name"><?php echo htmlspecialchars($staff['name']); ?></div>
-                                    <div class="staff-role"><?php echo htmlspecialchars($staff['role']); ?></div>
-                                </div>
-                            </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Module Detail Modal -->
-            <div class="modal" id="moduleDetailModal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3 class="modal-title"></h3>
-                        <button onclick="closeModuleModal()" class="close-btn">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="module-info">
-                            <div class="module-detail-group">
-                                <label>Description</label>
-                                <p class="module-detail-description"></p>
-                            </div>
-                            <div class="module-detail-group">
-                                <label>Credits</label>
-                                <p class="module-detail-credits"></p>
-                            </div>
-                            <div class="module-detail-group">
-                                <label>Teaching Staff</label>
-                                <p class="module-detail-staff"></p>
-                            </div>
-                            <div class="module-detail-group shared-programmes-list">
-                                <label>Shared with Programmes</label>
-                                <ul class="shared-programmes"></ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        <?php endif; ?>
+        </div>
     </div>
 
+    <script src="<?= BASE_URL ?>/public/js/alpine.min.js"></script>
     <script>
-        function registerInterest(programmeId) {
-            fetch(`/student-course-hub/api/programmes/${programmeId}/interest`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+        async function registerInterest(programmeId) {
+            try {
+                const response = await fetch(`${BASE_URL}/student/register_interest_api.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ programme_id: programmeId })
+                });
+                
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error || 'Failed to register interest');
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
+                
+                const data = await response.json();
                 if (data.success) {
                     location.reload();
                 } else {
-                    alert('Failed to register interest. Please try again.');
+                    throw new Error(data.error || 'Failed to register interest');
                 }
-            })
-            .catch(error => {
+            } catch (error) {
                 console.error('Error:', error);
-                alert('An error occurred. Please try again.');
-            });
+                alert(error.message || 'Failed to register interest. Please try again later.');
+            }
         }
 
-        function withdrawInterest(programmeId) {
-            if (!confirm('Are you sure you want to withdraw your interest in this programme?')) {
+        async function withdrawInterest(programmeId) {
+            if (!confirm('Are you sure you want to withdraw your interest from this programme?')) {
                 return;
             }
 
-            fetch(`/student-course-hub/api/programmes/${programmeId}/interest`, {
-                method: 'DELETE',
+            try {
+                const response = await fetch(`${BASE_URL}/student/withdraw_interest.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ programme_id: programmeId })
+                });
+                
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error || 'Failed to withdraw interest');
+                }
+                
+                const data = await response.json();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    throw new Error(data.error || 'Failed to withdraw interest');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message || 'Failed to withdraw interest. Please try again later.');
+            }
+        }
+
+        function registerInterest(programmeId) {
+            const btn = document.getElementById('registerBtn');
+            if (!btn) return;
+
+            // Disable button and show loading state
+            btn.disabled = true;
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = `
+                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Registering...</span>
+            `;
+
+            // Send AJAX request
+            fetch('<?= BASE_URL ?>/api/register_interest.php', {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                }
+                },
+                body: JSON.stringify({ programme_id: programmeId })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    location.reload();
+                    // Refresh the page to show updated state
+                    window.location.reload();
                 } else {
-                    alert('Failed to withdraw interest. Please try again.');
+                    throw new Error(data.message || 'Failed to register interest');
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
+                // Show error and restore button state
+                alert(error.message);
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
             });
         }
 
-        document.querySelectorAll('.module-card').forEach(card => {
-            card.addEventListener('click', () => {
-                const moduleData = JSON.parse(card.dataset.module);
-                showModuleDetails(moduleData);
-            });
-        });
-
-        function showModuleDetails(module) {
-            const modal = document.getElementById('moduleDetailModal');
-            modal.querySelector('.modal-title').textContent = module.title;
-            modal.querySelector('.module-detail-description').textContent = module.description;
-            modal.querySelector('.module-detail-credits').textContent = `${module.credits} Credits`;
-            modal.querySelector('.module-detail-staff').textContent = module.staff_name || 'Not assigned';
-
-            const sharedList = modal.querySelector('.shared-programmes');
-            sharedList.innerHTML = '';
-            
-            if (module.shared_programmes && module.shared_programmes.length > 0) {
-                module.shared_programmes.forEach(prog => {
-                    const li = document.createElement('li');
-                    li.textContent = prog.title;
-                    sharedList.appendChild(li);
+        // Add loading state to withdrawal form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            const withdrawForm = document.querySelector('form[action="withdraw_interest.php"]');
+            if (withdrawForm) {
+                withdrawForm.addEventListener('submit', function(e) {
+                    const btn = this.querySelector('button');
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = `
+                            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Withdrawing...</span>
+                        `;
+                    }
                 });
-                modal.querySelector('.shared-programmes-list').style.display = 'block';
-            } else {
-                modal.querySelector('.shared-programmes-list').style.display = 'none';
-            }
-
-            modal.style.display = 'block';
-        }
-
-        function closeModuleModal() {
-            document.getElementById('moduleDetailModal').style.display = 'none';
-        }
-
-        // Close modal when clicking outside
-        window.addEventListener('click', (event) => {
-            const modal = document.getElementById('moduleDetailModal');
-            if (event.target === modal) {
-                closeModuleModal();
             }
         });
     </script>
