@@ -15,7 +15,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     <i class="fas fa-home"></i> Dashboard
                 </a>
             </li>
-            <li <?php echo ($current_page == 'programmes_new.php') ? 'class="active"' : ''; ?>>
+            <li <?php echo ($current_page == 'explore_programmes.php') ? 'class="active"' : ''; ?>>
                 <a href="<?php echo BASE_URL; ?>/student/explore_programmes">
                     <i class="fas fa-search"></i> Explore Programmes
                 </a>

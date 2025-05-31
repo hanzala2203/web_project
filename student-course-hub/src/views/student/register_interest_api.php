@@ -13,9 +13,10 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-// Get the programme ID from POST data
+// Get the data from POST
 $data = json_decode(file_get_contents('php://input'), true);
 $programmeId = $data['programme_id'] ?? null;
+$action = $data['action'] ?? 'register'; // Default to register if not specified
 
 if (!$programmeId) {
     http_response_code(400);
@@ -27,20 +28,28 @@ $studentId = $_SESSION['user_id'];
 $studentController = new StudentController();
 
 try {
-    // Check if already registered interest
-    if ($studentController->student->hasInterest($studentId, $programmeId)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'You have already registered interest in this programme']);
-        exit;
-    }
-
-    // Register interest
-    $result = $studentController->registerInterest($programmeId, $studentId);
-    if ($result) {
-        echo json_encode([
-            'success' => true,
-            'message' => 'Interest successfully registered'
-        ]);
+    // Log request details
+    error_log("Attempting to {$action} interest - Student ID: $studentId, Programme ID: $programmeId");
+    
+    if ($action === 'withdraw') {
+        // Withdraw interest
+        $result = $studentController->withdrawInterest($studentId, $programmeId);
+        if ($result) {
+            error_log("Successfully withdrawn interest for Student ID: $studentId, Programme ID: $programmeId");
+            echo json_encode([
+                'success' => true,
+                'message' => 'Interest successfully withdrawn'
+            ]);
+        }
+    } else {
+        // Register interest
+        $result = $studentController->registerInterest($studentId, $programmeId);
+        if ($result) {
+            error_log("Successfully registered interest for Student ID: $studentId, Programme ID: $programmeId");
+            echo json_encode([
+                'success' => true,
+                'message' => 'Interest successfully registered'
+            ]);
     } else {
         http_response_code(500);
         echo json_encode(['error' => 'Failed to register interest']);

@@ -1,0 +1,20 @@
+{
+  "name": "student-course-hub",
+  "version": "1.0.0",
+  "description": "# Student Course Hub",
+  "scripts": {
+    "build": "tailwindcss -i ./src/input.css -o ./public/assets/css/style.css",
+    "watch": "tailwindcss -i ./src/input.css -o ./public/assets/css/style.css --watch",
+    "dev": "npm run watch",
+    "prod": "npm run build -- --minify"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@tailwindcss/line-clamp": "^0.4.4",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.4",
+    "tailwindcss": "^4.1.8"
+  }
+}

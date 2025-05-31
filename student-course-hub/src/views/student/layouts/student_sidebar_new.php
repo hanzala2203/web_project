@@ -22,7 +22,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                         </li>
                         <li>
                             <a href="<?= BASE_URL ?>/student/explore_programmes" 
-                               class="<?= $current_page == 'programmes_new.php' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' ?> group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                               class="<?= $current_page == 'explore_programmes.php' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' ?> group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
                                 <i class="fas fa-search h-6 w-6 shrink-0"></i>
                                 Explore Programmes
                             </a>
