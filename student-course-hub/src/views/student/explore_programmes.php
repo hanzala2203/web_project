@@ -240,27 +240,38 @@ require_once __DIR__ . '/../layouts/header.php';
                                       hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2
                                       transition-all duration-200 font-medium">
                                 <i class="fas fa-info-circle mr-2"></i> View Details
-                            </a>                            <?php if (isset($_SESSION['user_id'])): ?>
-                            <button data-programme-id="<?= $programme['id'] ?>" 
-                                    data-action="<?= isset($programme['interest_registered']) ? 'withdraw' : 'register' ?>"
-                                    class="flex-1 inline-flex justify-center items-center px-4 py-2.5 
-                                           <?= isset($programme['interest_registered']) 
-                                               ? 'bg-red-100 text-red-700 hover:bg-red-200' 
-                                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200' ?> 
-                                           rounded-lg font-medium
-                                           focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 
-                                           transition-all duration-200">
-                            <i class="<?= isset($programme['interest_registered']) ? 'fas' : 'far' ?> fa-bookmark mr-2"></i>
-                            <?= isset($programme['interest_registered']) ? 'Withdraw Interest' : 'Register Interest' ?>
-                        </button>
-                    <?php else: ?>
-                        <a href="<?= BASE_URL ?>/auth/login?redirect=<?= urlencode(BASE_URL . '/student/explore_programmes') ?>" 
-                           class="flex-1 inline-flex justify-center items-center px-4 py-2.5 
-                                  bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-medium
-                                  focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 
-                                  transition-all duration-200">
-                            <i class="far fa-bookmark mr-2"></i> Login to Register
-                        </a>                                <?php endif; ?>
+                            </a>                            <?php if (isset($_SESSION['user_id'])): ?>    <form action="<?= BASE_URL ?>/student/interests/handle" method="POST" class="flex-1">
+        <input type="hidden" name="programme_id" value="<?= $programme['id'] ?>">
+        <input type="hidden" name="redirect" value="<?= BASE_URL ?>/student/explore_programmes">
+        <?php if (isset($programme['interest_registered'])): ?>
+            <input type="hidden" name="action" value="withdraw">
+            <button type="submit" 
+                    class="flex-1 inline-flex justify-center items-center px-4 py-2.5 
+                            bg-red-100 text-red-700 hover:bg-red-200 rounded-lg font-medium
+                            focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 
+                            transition-all duration-200">
+                <i class="fas fa-bookmark mr-2"></i> Withdraw Interest
+            </button>
+        <?php else: ?>
+            <input type="hidden" name="action" value="register">
+            <button type="submit" 
+                    class="flex-1 inline-flex justify-center items-center px-4 py-2.5 
+                            bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-medium
+                            focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 
+                            transition-all duration-200">
+                <i class="far fa-bookmark mr-2"></i> Register Interest
+            </button>
+        <?php endif; ?>
+    </form>
+<?php else: ?>
+    <a href="<?= BASE_URL ?>/auth/login?redirect=<?= urlencode(BASE_URL . '/student/explore_programmes') ?>" 
+        class="flex-1 inline-flex justify-center items-center px-4 py-2.5 
+                bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-medium
+                focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 
+                transition-all duration-200">
+        <i class="far fa-bookmark mr-2"></i> Login to Register
+    </a>
+<?php endif; ?>
                     </div>
                 </div>
             </div>

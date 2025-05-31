@@ -3,6 +3,7 @@
 use App\Controllers\AdminController;
 use App\Controllers\AuthController;
 use App\Controllers\StaffController;
+use App\Controllers\StudentController;
 
 // Get the request path
 $request = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -19,6 +20,7 @@ if (substr($path, -4) === '.php') {
 // Initialize controllers
 $admin = new AdminController();
 $auth = new AuthController();
+$student = new StudentController();
 
 // Basic router
 switch ($path) {
@@ -192,6 +194,11 @@ switch ($path) {
         $student = new \App\Controllers\StudentController();
         $student->getFilteredProgrammes();
         break;
+
+    case '/student/register_interest_api':
+    case '/student/register_interest_api.php':
+        require_once BASE_PATH . '/student/register_interest_api.php';
+        break;
         
     // Student routes    case '/student/explore_programmes':
     case '/student/explore_programmes.php':
@@ -219,9 +226,23 @@ switch ($path) {
 
     case '/student/register_interest':
         require_once BASE_PATH . '/src/views/student/register_interest.php';
+        break;    
+    case '/student/interests/handle':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require_once BASE_PATH . '/src/views/student/handle_interest.php';
+        }
+        break;    case '/student/withdraw_interest':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $student = new \App\Controllers\StudentController();
+            $student->handleWithdrawInterest();
+        } else {
+            header('Location: ' . BASE_URL . '/student/manage_interests');
+            exit;
+        }
         break;
 
-    // Default route for 404    default:
+    // Default route for 404
+    default:
         // Handle 404
         http_response_code(404);
         include BASE_PATH . '/src/views/404.php';
