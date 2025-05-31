@@ -31,9 +31,8 @@ require_once __DIR__ . '/../layouts/header.php';
                         <p class="text-xl opacity-90"><?= ucfirst(htmlspecialchars($programme['level'])) ?> Programme</p>
                     </div>
                 </div>
-            </div>
-
-            <!-- Programme Stats -->            <div class="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-200 bg-white">
+            </div>            <!-- Programme Stats -->            
+            <div class="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-200 bg-white">
                 <div class="p-6 text-center">
                     <div class="flex items-center justify-center text-indigo-600 mb-2">
                         <i class="fas fa-clock text-2xl"></i>
@@ -64,31 +63,35 @@ require_once __DIR__ . '/../layouts/header.php';
             </div>
             
             <div class="programme-actions p-6 bg-gray-50 border-t border-gray-200">
-                    <?php if ($studentId): ?>                        <?php if ($hasInterest): ?>
-                            <form action="withdraw_interest.php" method="POST" class="inline">
-                                <input type="hidden" name="programme_id" value="<?= htmlspecialchars($programme['id'] ?? '') ?>">
-                                <button type="submit" 
-                                        class="w-full sm:w-auto px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-sm transition duration-150 ease-in-out flex items-center justify-center gap-2 disabled:opacity-50"
-                                        id="withdrawBtn">
-                                    <i class="fas fa-bookmark"></i> 
-                                    <span>Withdraw Interest</span>
-                                </button>
-                            </form>
-                        <?php else: ?>
-                            <button onclick="registerInterest(<?= htmlspecialchars($programme['id'] ?? '') ?>)" 
-                                    class="w-full sm:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm transition duration-150 ease-in-out flex items-center justify-center gap-2 disabled:opacity-50"
-                                    id="registerBtn">
-                                <i class="far fa-bookmark"></i> 
-                                <span>Register Interest</span>
-                            </button>
-                        <?php endif; ?>
-                    <?php else: ?>
-                        <a href="<?= htmlspecialchars(BASE_URL) ?>/auth/login" 
-                           class="w-full sm:w-auto px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-sm transition duration-150 ease-in-out flex items-center justify-center gap-2">
-                            <i class="fas fa-sign-in-alt"></i>
-                            <span>Login to Register Interest</span>
-                        </a>
-                    <?php endif; ?>
+                <?php if ($studentId): ?>    <form id="interestForm" action="<?= BASE_URL ?>/student/interests/handle" method="POST" class="w-full sm:w-auto">
+        <input type="hidden" name="programme_id" value="<?= htmlspecialchars($programme['id'] ?? '') ?>">
+        <input type="hidden" name="redirect" value="<?= BASE_URL ?>/student/programme_details?id=<?= htmlspecialchars($programme['id'] ?? '') ?>">
+        <?php if ($hasInterest): ?>
+            <input type="hidden" name="action" value="withdraw">
+            <button type="submit" 
+                    class="w-full sm:w-auto px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg 
+                           shadow-sm transition duration-150 ease-in-out flex items-center justify-center gap-2">
+                <i class="fas fa-bookmark"></i> 
+                <span>Withdraw Interest</span>
+            </button>
+        <?php else: ?>
+            <input type="hidden" name="action" value="register">
+            <button type="submit"
+                    class="w-full sm:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg 
+                           shadow-sm transition duration-150 ease-in-out flex items-center justify-center gap-2">
+                <i class="far fa-bookmark"></i> 
+                <span>Register Interest</span>
+            </button>
+        <?php endif; ?>
+    </form>
+<?php else: ?>
+    <a href="<?= htmlspecialchars(BASE_URL) ?>/auth/login?redirect=<?= urlencode($_SERVER['REQUEST_URI']) ?>" 
+       class="w-full sm:w-auto px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg 
+              shadow-sm transition duration-150 ease-in-out flex items-center justify-center gap-2">
+        <i class="fas fa-sign-in-alt"></i>
+        <span>Login to Register Interest</span>
+    </a>
+<?php endif; ?>
             </div>
         </div>
 
