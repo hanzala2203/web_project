@@ -26,11 +26,11 @@ class StudentController extends Model {
         }
     }
 
-    public function registerInterest($courseId, $studentId) {
+    public function registerInterest($studentId, $programmeId) {
         try {
             // Validate inputs
-            if (!$this->programme->exists($courseId)) {
-                throw new Exception("Course not found");
+            if (!$this->programme->exists($programmeId)) {
+                throw new Exception("Programme not found");
             }
 
             if (!$this->student->exists($studentId)) {
@@ -38,62 +38,122 @@ class StudentController extends Model {
             }
 
             // Check if already registered
-            if ($this->student->hasInterest($studentId, $courseId)) {
-                throw new Exception("Already registered interest in this course");
+            if ($this->student->hasInterest($studentId, $programmeId)) {
+                throw new Exception("Already registered interest in this programme");
             }
 
+            // Log the attempt
+            error_log("StudentController: Attempting to add interest - Student ID: $studentId, Programme ID: $programmeId");
+            
             // Register interest
-            return $this->student->addInterest($studentId, $courseId);
+            $result = $this->student->addInterest($studentId, $programmeId);
+            
+            if ($result) {
+                error_log("StudentController: Successfully added interest");
+                return true;
+            } else {
+                error_log("StudentController: Failed to add interest");
+                return false;
+            }
 
         } catch (Exception $e) {
-            error_log("Error registering interest: " . $e->getMessage());
+            error_log("StudentController: Error registering interest: " . $e->getMessage());
             throw new Exception("Failed to register interest: " . $e->getMessage());
         }
     }
 
-    public function withdrawInterest($courseId, $studentId) {
+    public function withdrawInterest($studentId, $programmeId) {
         try {
-            if (!$this->student->hasInterest($studentId, $courseId)) {
-                throw new Exception("No interest registered for this course");
+            // Validate inputs
+            if (!$this->programme->exists($programmeId)) {
+                throw new Exception("Programme not found");
             }
 
-            return $this->student->removeInterest($studentId, $courseId);
+            if (!$this->student->exists($studentId)) {
+                throw new Exception("Student not found");
+            }
 
+            // Check if interest exists
+            if (!$this->student->hasInterest($studentId, $programmeId)) {
+                throw new Exception("No registered interest found for this programme");
+            }
+
+            // Log the attempt
+            error_log("StudentController: Attempting to withdraw interest - Student ID: $studentId, Programme ID: $programmeId");
+            
+            // Withdraw interest
+            $result = $this->student->removeInterest($studentId, $programmeId);
+            
+            if ($result) {
+                error_log("StudentController: Successfully withdrew interest - Student ID: $studentId, Programme ID: $programmeId");
+                return true;
+            }
+            return false;
         } catch (Exception $e) {
-            error_log("Error withdrawing interest: " . $e->getMessage());
-            throw new Exception("Failed to withdraw interest: " . $e->getMessage());
+            error_log("Error in withdrawInterest: " . $e->getMessage());
+            throw $e;
         }
     }
 
-    public function viewCourseDetails($courseId) {
+    public function viewProgrammeDetails($programmeId) {
         try {
-            $course = $this->programme->findById($courseId);
-            
-            if (!$course || !$course['is_published']) {
-                throw new Exception("Course not found");
+            if (!$programmeId) {
+                $_SESSION['error'] = 'Programme ID is required';
+                header('Location: ' . BASE_URL . '/error');
+                exit;
             }
 
-            // Enhanced module information
-            $course['modules'] = $this->programme->getModules($courseId);
-            foreach ($course['modules'] as &$module) {
-                $module['shared_programmes'] = $this->module->getSharedProgrammes($module['id']);
-                $module['accessibility_features'] = $this->getModuleAccessibilityFeatures($module['id']);
+            // Get programme details with modules
+            $programme = $this->programme->findById($programmeId);
+            if (!$programme) {
+                throw new \Exception("Programme not found");
             }
+
+            // Set default images
+            $programme['image_url'] = $programme['image_url'] ?? '/assets/images/default-programme.jpg';
             
-            // Get course staff with detailed profiles
-            $course['staff'] = $this->programme->getStaffMembers($courseId);
-            
-            // Add accessibility information
-            $course['accessibility'] = [
-                'has_transcripts' => true,
-                'has_alt_formats' => true,
-                'wcag_compliance' => 'AA'
+            // Flatten and enhance modules array
+            $flatModules = [];
+            if (isset($programme['modules']) && is_array($programme['modules'])) {
+                foreach ($programme['modules'] as $year => $yearModules) {
+                    foreach ($yearModules as $module) {
+                        $module['image_url'] = $module['image_url'] ?? '/assets/images/default-module.jpg';
+                        $flatModules[] = $module;
+                    }
+                }
+            }
+            $programme['modules'] = $flatModules;
+
+            // Get student's interest status
+            $studentId = $_SESSION['user_id'] ?? null;
+            $hasInterest = false;
+            if ($studentId) {
+                try {
+                    $hasInterest = $this->student->hasInterest($studentId, $programmeId);
+                } catch (\Exception $e) {
+                    error_log("Error checking interest: " . $e->getMessage());
+                }
+            }
+
+            // Prepare data for view
+            $data = [
+                'programme' => $programme,
+                'studentId' => $studentId,
+                'hasInterest' => $hasInterest,
+                'pageTitle' => 'Programme Details: ' . ($programme['title'] ?? 'Unknown Programme')
             ];
 
-            return $course;
-        } catch (Exception $e) {
-            error_log("Error viewing course details: " . $e->getMessage());
-            throw new Exception("Failed to retrieve course details");
+            // Extract data to make it available in the view
+            extract($data);
+            
+            // Show the view
+            require_once __DIR__ . '/../views/student/programme_details.php';
+            
+        } catch (\Exception $e) {
+            error_log("Error in viewProgrammeDetails: " . $e->getMessage());
+            $_SESSION['error'] = "Error loading programme details";
+            header('Location: ' . BASE_URL . '/error');
+            exit;
         }
     }
 
@@ -275,14 +335,25 @@ class StudentController extends Model {
             }
             $studentId = $_SESSION['user_id'];
             
-            // Get all published programmes with error handling
+            // Get query parameters
+            $query = $_GET['query'] ?? '';
+            $filters = [
+                'level' => $_GET['level'] ?? '',
+                'duration' => $_GET['duration'] ?? '',
+                'department' => $_GET['department'] ?? ''
+            ];
+            
+            // Remove empty filters
+            $filters = array_filter($filters);
+            
+            // Get filtered and searched programmes
             try {
-                $programmes = $this->programme->getAllPublished();
+                $programmes = $this->programme->searchProgrammes($query, $filters);
                 if (!$programmes) {
                     $programmes = []; // Set empty array if no programmes found
                 }
             } catch (\Exception $e) {
-                error_log("Error getting published programmes: " . $e->getMessage());
+                error_log("Error getting filtered programmes: " . $e->getMessage());
                 $programmes = [];
             }
             
@@ -312,7 +383,7 @@ class StudentController extends Model {
             // Extract data to make it available in the view
             extract($data);
             
-            require_once BASE_PATH . '/src/views/student/programmes_new.php';
+            require_once BASE_PATH . '/src/views/student/explore_programmes.php';
         } catch (\Exception $e) {
             error_log("Error in exploreProgrammes: " . $e->getMessage());
             $_SESSION['error'] = "An error occurred while loading programmes. Please try again later.";
@@ -701,26 +772,32 @@ class StudentController extends Model {
 
     public function getProgrammeStructure($programmeId) {
         try {
-            // Validate programme exists
-            if (!$this->programme->exists($programmeId)) {
+            // Get programme details first
+            $details = $this->programme->findById($programmeId);
+            if (!$details) {
                 throw new \Exception("Programme not found");
             }
             
             // Get detailed programme structure
-            $structure = $this->programme->getProgrammeStructure($programmeId);
+            try {
+                $structure = $this->programme->getProgrammeStructure($programmeId);
+            } catch (\Exception $e) {
+                error_log("Error getting programme structure: " . $e->getMessage());
+                $structure = []; // Default to empty structure if not found
+            }
             
-            // Get programme details
-            $details = $this->programme->findById($programmeId);
+            // Calculate total credits
+            $totalCredits = $this->calculateTotalCredits($structure);
             
             return [
                 'programme' => $details,
                 'structure' => $structure,
-                'total_credits' => $this->calculateTotalCredits($structure)
+                'total_credits' => $totalCredits
             ];
             
         } catch (\Exception $e) {
             error_log("Error getting programme structure: " . $e->getMessage());
-            throw new \Exception("Failed to retrieve programme structure");
+            throw new \Exception("Failed to retrieve programme details");
         }
     }
 
@@ -772,60 +849,54 @@ class StudentController extends Model {
         }
     }
 
-    public function viewProgrammeDetails($id) {
+    public function getSharedModules($programmeId) {
         try {
-            if (!$id) {
-                error_log('Programme ID not provided');
-                $_SESSION['error'] = 'Programme ID is required';
-                header('Location: ' . BASE_URL . '/error');
-                exit;
-            }
-
-            error_log('Looking up programme with ID: ' . $id);
-            $programme = $this->programme->findById($id);
+            // Get all modules for this programme
+            $modules = $this->programme->getModules($programmeId);
             
-            if (!$programme) {
-                error_log('Programme not found with ID: ' . $id);
-                $_SESSION['error'] = 'Programme not found';
-                header('Location: ' . BASE_URL . '/error');
-                exit;
-            }
-
-            error_log('Found programme: ' . print_r($programme, true));
-
-            // Get programme structure
-            $structure = $this->programme->getProgrammeStructure($id);
-            error_log('Programme structure: ' . print_r($structure, true));
-            
-            // Calculate total credits from modules in structure
-            $totalCredits = 0;
-            foreach ($structure as $year) {
-                foreach ($year as $semester) {
-                    foreach ($semester as $module) {
-                        $totalCredits += isset($module['credits']) ? $module['credits'] : 0;
-                    }
+            $sharedModules = [];
+            foreach ($modules as $module) {
+                // Get other programmes that share this module
+                $sharedProgrammes = $this->module->getSharedProgrammes($module['id']);
+                if (count($sharedProgrammes) > 1) { // More than 1 means shared
+                    $module['shared_with'] = array_filter($sharedProgrammes, function($p) use ($programmeId) {
+                        return $p['id'] != $programmeId;
+                    });
+                    $sharedModules[] = $module;
                 }
             }
             
-            // Get staff members
-            $staffMembers = $this->programme->getStaffMembers($id);
+            // Add any modules from other programmes that are shared with this one
+            $stmt = $this->db->prepare("
+                SELECT DISTINCT m.*
+                FROM modules m
+                INNER JOIN programme_modules pm1 ON m.id = pm1.module_id
+                INNER JOIN programme_modules pm2 ON m.id = pm2.module_id
+                WHERE pm1.programme_id = :programme_id
+                AND pm2.programme_id != :programme_id
+            ");
+            $stmt->execute([':programme_id' => $programmeId]);
+            $additionalModules = $stmt->fetchAll();
             
-            // Check if student has registered interest
-            $hasInterest = false;
-            $studentId = null;
-            if (isset($_SESSION['user_id'])) {
-                $studentId = $_SESSION['user_id'];
-                $hasInterest = $this->student->hasInterest($studentId, $id);
+            // Merge the results, avoiding duplicates
+            foreach ($additionalModules as $module) {
+                $exists = false;
+                foreach ($sharedModules as $existingModule) {
+                    if ($existingModule['id'] === $module['id']) {
+                        $exists = true;
+                        break;
+                    }
+                }
+                if (!$exists) {
+                    $sharedModules[] = $module;
+                }
             }
             
-            // Include the view
-            require BASE_PATH . '/src/views/student/programme_details_new.php';
+            return $sharedModules;
+            
         } catch (\Exception $e) {
-            error_log('Error viewing programme details: ' . $e->getMessage());
-            error_log('Stack trace: ' . $e->getTraceAsString());
-            $_SESSION['error'] = 'An error occurred while loading the programme details';
-            header('Location: ' . BASE_URL . '/error');
-            exit;
+            error_log("Error getting shared modules: " . $e->getMessage());
+            return []; // Return empty array instead of throwing to maintain consistency
         }
     }
 }

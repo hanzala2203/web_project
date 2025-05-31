@@ -21,9 +21,8 @@ try {
     // Check if already registered interest
     if ($studentController->student->hasInterest($studentId, $programmeId)) {
         $_SESSION['info'] = 'You have already registered interest in this programme.';
-    } else {
-        // Register interest
-        $result = $studentController->registerInterest($programmeId, $studentId);
+    } else {        // Register interest
+        $result = $studentController->registerInterest($studentId, $programmeId);
         if ($result) {
             $_SESSION['success'] = 'Interest successfully registered.';
         } else {

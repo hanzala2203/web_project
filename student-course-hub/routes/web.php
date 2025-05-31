@@ -197,7 +197,7 @@ switch ($path) {
     case '/student/explore_programmes.php':
         $student = new \App\Controllers\StudentController();
         $student->exploreProgrammes();
-        require_once BASE_PATH . '/src/views/student/programmes_new.php';
+        require_once BASE_PATH . '/src/views/student/explore_programmes.php';
         break;    case '/student/dashboard':
         $student = new \App\Controllers\StudentController();
         $student->viewDashboard();
@@ -221,10 +221,9 @@ switch ($path) {
         require_once BASE_PATH . '/src/views/student/register_interest.php';
         break;
 
-    // Default route for 404
-    default:
+    // Default route for 404    default:
         // Handle 404
         http_response_code(404);
-        include BASE_PATH . '/views/404.php';
+        include BASE_PATH . '/src/views/404.php';
         break;
 }
