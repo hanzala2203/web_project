@@ -1028,3 +1028,633 @@ Stack trace:
 )
 
 [31-May-2025 19:12:57 Europe/Berlin] Found 10 programmes
+[31-May-2025 19:27:52 Europe/Berlin] PHP Parse error:  syntax error, unexpected token ":", expecting "," or ";" in C:\xampp\htdocs\student-course-hub\src\models\Student.php on line 21
+[31-May-2025 19:27:56 Europe/Berlin] PHP Parse error:  syntax error, unexpected token ":", expecting "," or ";" in C:\xampp\htdocs\student-course-hub\src\models\Student.php on line 21
+[31-May-2025 19:29:28 Europe/Berlin] PHP Parse error:  Unmatched '}' in C:\xampp\htdocs\student-course-hub\src\models\Student.php on line 3
+[31-May-2025 19:29:29 Europe/Berlin] PHP Parse error:  Unmatched '}' in C:\xampp\htdocs\student-course-hub\src\models\Student.php on line 3
+[31-May-2025 19:42:36 Europe/Berlin] PHP Fatal error:  Cannot redeclare App\Models\Student::removeInterest() in C:\xampp\htdocs\student-course-hub\src\models\Student.php on line 108
+[31-May-2025 19:46:26 Europe/Berlin] PHP Fatal error:  Cannot redeclare App\Models\Student::hasInterest() in C:\xampp\htdocs\student-course-hub\src\models\Student.php on line 108
+[31-May-2025 19:46:27 Europe/Berlin] PHP Fatal error:  Cannot redeclare App\Models\Student::hasInterest() in C:\xampp\htdocs\student-course-hub\src\models\Student.php on line 108
+[31-May-2025 19:49:05 Europe/Berlin] Error getting enrolled courses for student ID 8: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'e.programme_id' in 'on clause'
+[31-May-2025 19:49:05 Europe/Berlin] Error in getUpcomingDeadlines: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'a.deadline' in 'where clause'
+[31-May-2025 19:49:05 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined method App\Models\Student::getInterestedCourses() in C:\xampp\htdocs\student-course-hub\src\controllers\StudentController.php:278
+Stack trace:
+#0 C:\xampp\htdocs\student-course-hub\index.php(73): App\Controllers\StudentController->viewDashboardNew()
+#1 {main}
+  thrown in C:\xampp\htdocs\student-course-hub\src\controllers\StudentController.php on line 278
+[31-May-2025 19:49:06 Europe/Berlin] Error getting enrolled courses for student ID 8: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'e.programme_id' in 'on clause'
+[31-May-2025 19:49:06 Europe/Berlin] Error in getUpcomingDeadlines: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'a.deadline' in 'where clause'
+[31-May-2025 19:49:06 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined method App\Models\Student::getInterestedCourses() in C:\xampp\htdocs\student-course-hub\src\controllers\StudentController.php:278
+Stack trace:
+#0 C:\xampp\htdocs\student-course-hub\index.php(73): App\Controllers\StudentController->viewDashboardNew()
+#1 {main}
+  thrown in C:\xampp\htdocs\student-course-hub\src\controllers\StudentController.php on line 278
+[31-May-2025 20:02:27 Europe/Berlin] Error getting enrolled courses for student ID 8: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'e.programme_id' in 'on clause'
+[31-May-2025 20:02:31 Europe/Berlin] Error in getUpcomingDeadlines: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'a.deadline' in 'where clause'
+[31-May-2025 20:02:33 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 20:02:33 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 20:02:33 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 20:02:33 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[31-May-2025 20:02:33 Europe/Berlin] Parameters: Array
+(
+)
+
+[31-May-2025 20:02:33 Europe/Berlin] Found 10 programmes
+[31-May-2025 20:24:48 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 20:24:48 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 20:24:48 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 20:24:48 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[31-May-2025 20:24:48 Europe/Berlin] Parameters: Array
+(
+)
+
+[31-May-2025 20:24:48 Europe/Berlin] Found 10 programmes
+[31-May-2025 20:24:48 Europe/Berlin] Error getting interests for student ID 8: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'si.created_at' in 'field list'
+[31-May-2025 20:24:48 Europe/Berlin] Error getting student interests: Failed to retrieve student interests
+[31-May-2025 20:33:33 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 20:33:33 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 20:33:33 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 20:33:33 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[31-May-2025 20:33:33 Europe/Berlin] Parameters: Array
+(
+)
+
+[31-May-2025 20:33:33 Europe/Berlin] Found 10 programmes
+[31-May-2025 20:40:41 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 20:40:41 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 20:40:41 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 20:40:41 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[31-May-2025 20:40:41 Europe/Berlin] Parameters: Array
+(
+)
+
+[31-May-2025 20:40:41 Europe/Berlin] Found 10 programmes
+[31-May-2025 20:46:35 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 20:46:35 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 20:46:35 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 20:46:35 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[31-May-2025 20:46:35 Europe/Berlin] Parameters: Array
+(
+)
+
+[31-May-2025 20:46:35 Europe/Berlin] Found 10 programmes
+[31-May-2025 20:54:56 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 20:54:56 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 20:54:56 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 20:54:56 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[31-May-2025 20:54:56 Europe/Berlin] Parameters: Array
+(
+)
+
+[31-May-2025 20:54:56 Europe/Berlin] Found 10 programmes
+[31-May-2025 20:57:54 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 20:57:54 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 20:57:54 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 20:57:54 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[31-May-2025 20:57:54 Europe/Berlin] Parameters: Array
+(
+)
+
+[31-May-2025 20:57:54 Europe/Berlin] Found 10 programmes
+[31-May-2025 21:27:39 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 21:27:39 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 21:27:39 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 21:27:39 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[31-May-2025 21:27:39 Europe/Berlin] Parameters: Array
+(
+)
+
+[31-May-2025 21:27:39 Europe/Berlin] Found 10 programmes
+[31-May-2025 21:32:40 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 21:32:40 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 21:32:40 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 21:32:40 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[31-May-2025 21:32:40 Europe/Berlin] Parameters: Array
+(
+)
+
+[31-May-2025 21:32:40 Europe/Berlin] Found 10 programmes
+[31-May-2025 21:39:34 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 21:39:34 Europe/Berlin] Filters: Array
+(
+    [duration] => 2
+)
+
+[31-May-2025 21:39:34 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 21:39:34 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 AND p.duration LIKE :duration ORDER BY p.title ASC
+[31-May-2025 21:39:34 Europe/Berlin] Parameters: Array
+(
+    [:duration] => %2%
+)
+
+[31-May-2025 21:39:34 Europe/Berlin] Found 1 programmes
+[31-May-2025 21:39:39 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 21:39:39 Europe/Berlin] Filters: Array
+(
+    [duration] => 2
+)
+
+[31-May-2025 21:39:39 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 21:39:39 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 AND p.duration LIKE :duration ORDER BY p.title ASC
+[31-May-2025 21:39:39 Europe/Berlin] Parameters: Array
+(
+    [:duration] => %2%
+)
+
+[31-May-2025 21:39:39 Europe/Berlin] Found 1 programmes
+[31-May-2025 21:39:51 Europe/Berlin] Starting searchProgrammes with query: BA E
+[31-May-2025 21:39:51 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 21:39:51 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 21:39:51 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 AND (
+                    p.title LIKE :query 
+                    OR p.description LIKE :query 
+                    OR p.department LIKE :query
+                ) ORDER BY p.title ASC
+[31-May-2025 21:39:51 Europe/Berlin] Parameters: Array
+(
+    [:query] => %BA E%
+)
+
+[31-May-2025 21:39:51 Europe/Berlin] Found 1 programmes
+[31-May-2025 21:39:55 Europe/Berlin] Starting searchProgrammes with query: BA E
+[31-May-2025 21:39:55 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 21:39:55 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 21:39:55 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 AND (
+                    p.title LIKE :query 
+                    OR p.description LIKE :query 
+                    OR p.department LIKE :query
+                ) ORDER BY p.title ASC
+[31-May-2025 21:39:55 Europe/Berlin] Parameters: Array
+(
+    [:query] => %BA E%
+)
+
+[31-May-2025 21:39:55 Europe/Berlin] Found 1 programmes
+[31-May-2025 21:40:10 Europe/Berlin] Starting searchProgrammes with query: Bsc
+[31-May-2025 21:40:10 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 21:40:10 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 21:40:10 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 AND (
+                    p.title LIKE :query 
+                    OR p.description LIKE :query 
+                    OR p.department LIKE :query
+                ) ORDER BY p.title ASC
+[31-May-2025 21:40:10 Europe/Berlin] Parameters: Array
+(
+    [:query] => %Bsc%
+)
+
+[31-May-2025 21:40:10 Europe/Berlin] Found 4 programmes
+[31-May-2025 21:40:11 Europe/Berlin] Starting searchProgrammes with query: Bsc
+[31-May-2025 21:40:11 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 21:40:11 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 21:40:11 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 AND (
+                    p.title LIKE :query 
+                    OR p.description LIKE :query 
+                    OR p.department LIKE :query
+                ) ORDER BY p.title ASC
+[31-May-2025 21:40:11 Europe/Berlin] Parameters: Array
+(
+    [:query] => %Bsc%
+)
+
+[31-May-2025 21:40:11 Europe/Berlin] Found 4 programmes
+[31-May-2025 21:41:25 Europe/Berlin] PHP Fatal error:  Cannot redeclare App\Controllers\StudentController::handleRegisterInterest() in C:\xampp\htdocs\student-course-hub\src\controllers\StudentController.php on line 914
+[31-May-2025 21:46:23 Europe/Berlin] PHP Fatal error:  Cannot redeclare App\Controllers\StudentController::handleRegisterInterest() in C:\xampp\htdocs\student-course-hub\src\controllers\StudentController.php on line 964
+[31-May-2025 21:46:23 Europe/Berlin] PHP Fatal error:  Cannot redeclare App\Controllers\StudentController::handleRegisterInterest() in C:\xampp\htdocs\student-course-hub\src\controllers\StudentController.php on line 964
+[31-May-2025 21:46:24 Europe/Berlin] PHP Fatal error:  Cannot redeclare App\Controllers\StudentController::handleRegisterInterest() in C:\xampp\htdocs\student-course-hub\src\controllers\StudentController.php on line 964
+[31-May-2025 21:46:36 Europe/Berlin] PHP Fatal error:  Cannot redeclare App\Controllers\StudentController::handleRegisterInterest() in C:\xampp\htdocs\student-course-hub\src\controllers\StudentController.php on line 964
+[31-May-2025 21:51:05 Europe/Berlin] Starting searchProgrammes with query: Bsc
+[31-May-2025 21:51:05 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 21:51:05 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 21:51:05 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 AND (
+                    p.title LIKE :query 
+                    OR p.description LIKE :query 
+                    OR p.department LIKE :query
+                ) ORDER BY p.title ASC
+[31-May-2025 21:51:05 Europe/Berlin] Parameters: Array
+(
+    [:query] => %Bsc%
+)
+
+[31-May-2025 21:51:05 Europe/Berlin] Found 4 programmes
+[31-May-2025 21:56:07 Europe/Berlin] Starting searchProgrammes with query: Bsc
+[31-May-2025 21:56:07 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 21:56:07 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 21:56:07 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 AND (
+                    p.title LIKE :query 
+                    OR p.description LIKE :query 
+                    OR p.department LIKE :query
+                ) ORDER BY p.title ASC
+[31-May-2025 21:56:07 Europe/Berlin] Parameters: Array
+(
+    [:query] => %Bsc%
+)
+
+[31-May-2025 21:56:07 Europe/Berlin] Found 4 programmes
+[31-May-2025 22:01:09 Europe/Berlin] Starting searchProgrammes with query: Bsc
+[31-May-2025 22:01:09 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 22:01:09 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 22:01:09 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 AND (
+                    p.title LIKE :query 
+                    OR p.description LIKE :query 
+                    OR p.department LIKE :query
+                ) ORDER BY p.title ASC
+[31-May-2025 22:01:09 Europe/Berlin] Parameters: Array
+(
+    [:query] => %Bsc%
+)
+
+[31-May-2025 22:01:09 Europe/Berlin] Found 4 programmes
+[31-May-2025 22:15:38 Europe/Berlin] PHP Fatal error:  Uncaught Error: Class "App\Models\Programme" not found in C:\xampp\htdocs\student-course-hub\src\controllers\AdminController.php:22
+Stack trace:
+#0 C:\xampp\htdocs\student-course-hub\routes\web.php(21): App\Controllers\AdminController->__construct()
+#1 C:\xampp\htdocs\student-course-hub\index.php(25): require_once('C:\\xampp\\htdocs...')
+#2 {main}
+  thrown in C:\xampp\htdocs\student-course-hub\src\controllers\AdminController.php on line 22
+[31-May-2025 22:15:53 Europe/Berlin] PHP Fatal error:  Uncaught Error: Class "App\Models\Programme" not found in C:\xampp\htdocs\student-course-hub\src\controllers\AdminController.php:22
+Stack trace:
+#0 C:\xampp\htdocs\student-course-hub\routes\web.php(21): App\Controllers\AdminController->__construct()
+#1 C:\xampp\htdocs\student-course-hub\index.php(25): require_once('C:\\xampp\\htdocs...')
+#2 {main}
+  thrown in C:\xampp\htdocs\student-course-hub\src\controllers\AdminController.php on line 22
+[31-May-2025 22:17:40 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 22:17:40 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 22:17:40 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 22:17:40 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[31-May-2025 22:17:40 Europe/Berlin] Parameters: Array
+(
+)
+
+[31-May-2025 22:17:40 Europe/Berlin] Found 10 programmes
+[31-May-2025 22:25:59 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 22:25:59 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 22:25:59 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 22:25:59 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[31-May-2025 22:26:00 Europe/Berlin] Parameters: Array
+(
+)
+
+[31-May-2025 22:26:00 Europe/Berlin] Found 10 programmes
+[31-May-2025 22:34:29 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 22:34:29 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 22:34:29 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 22:34:29 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[31-May-2025 22:34:29 Europe/Berlin] Parameters: Array
+(
+)
+
+[31-May-2025 22:34:29 Europe/Berlin] Found 10 programmes
+[31-May-2025 22:34:46 Europe/Berlin] Attempting login for email: admin_test@example.com
+[31-May-2025 22:34:46 Europe/Berlin] User found: yes
+[31-May-2025 22:34:46 Europe/Berlin] User role: admin
+[31-May-2025 22:34:46 Europe/Berlin] Password verification result: true
+[31-May-2025 22:34:48 Europe/Berlin] Session created with user_id: 15, role: admin
+[31-May-2025 22:34:48 Europe/Berlin] PHP Warning:  session_set_cookie_params(): Session cookie parameters cannot be changed when a session is active in C:\xampp\htdocs\student-course-hub\src\controllers\AuthController.php on line 105
+[31-May-2025 22:36:34 Europe/Berlin] Attempting login for email: m7@gmail.com
+[31-May-2025 22:36:34 Europe/Berlin] User found: yes
+[31-May-2025 22:36:34 Europe/Berlin] User role: student
+[31-May-2025 22:36:34 Europe/Berlin] Password verification result: true
+[31-May-2025 22:36:34 Europe/Berlin] Session created with user_id: 8, role: student
+[31-May-2025 22:36:34 Europe/Berlin] PHP Warning:  session_set_cookie_params(): Session cookie parameters cannot be changed when a session is active in C:\xampp\htdocs\student-course-hub\src\controllers\AuthController.php on line 105
+[31-May-2025 22:36:35 Europe/Berlin] Error getting enrolled courses for student ID 8: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'e.programme_id' in 'on clause'
+[31-May-2025 22:36:35 Europe/Berlin] Error in getUpcomingDeadlines: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'a.deadline' in 'where clause'
+[31-May-2025 22:36:38 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 22:36:38 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 22:36:38 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 22:36:38 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[31-May-2025 22:36:38 Europe/Berlin] Parameters: Array
+(
+)
+
+[31-May-2025 22:36:38 Europe/Berlin] Found 10 programmes
+[31-May-2025 22:36:42 Europe/Berlin] handle_interest.php accessed - POST data: Array
+(
+    [programme_id] => 49
+    [redirect] => /student-course-hub/student/explore_programmes
+    [action] => register
+)
+
+[31-May-2025 22:36:42 Europe/Berlin] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\student-course-hub\src\views\student\handle_interest.php on line 8
+[31-May-2025 22:36:42 Europe/Berlin] PHP Fatal error:  Uncaught Error: Class "StudentController" not found in C:\xampp\htdocs\student-course-hub\src\views\student\handle_interest.php:26
+Stack trace:
+#0 C:\xampp\htdocs\student-course-hub\index.php(99): require_once()
+#1 {main}
+  thrown in C:\xampp\htdocs\student-course-hub\src\views\student\handle_interest.php on line 26
+[31-May-2025 22:38:31 Europe/Berlin] handle_interest.php accessed - POST data: Array
+(
+    [programme_id] => 49
+    [redirect] => /student-course-hub/student/explore_programmes
+    [action] => register
+)
+
+[31-May-2025 22:38:31 Europe/Berlin] PHP Fatal error:  Uncaught Error: Cannot access private property App\Controllers\StudentController::$student in C:\xampp\htdocs\student-course-hub\src\views\student\handle_interest.php:41
+Stack trace:
+#0 C:\xampp\htdocs\student-course-hub\index.php(99): require_once()
+#1 {main}
+  thrown in C:\xampp\htdocs\student-course-hub\src\views\student\handle_interest.php on line 41
+[31-May-2025 22:40:34 Europe/Berlin] handle_interest.php accessed - POST data: Array
+(
+    [programme_id] => 49
+    [redirect] => /student-course-hub/student/explore_programmes
+    [action] => register
+)
+
+[31-May-2025 22:40:34 Europe/Berlin] StudentController: Attempting to add interest - Student ID: 8, Programme ID: 49
+[31-May-2025 22:40:35 Europe/Berlin] StudentController: Successfully added interest
+[31-May-2025 22:40:35 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 22:40:35 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 22:40:35 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 22:40:35 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[31-May-2025 22:40:35 Europe/Berlin] Parameters: Array
+(
+)
+
+[31-May-2025 22:40:35 Europe/Berlin] Found 10 programmes
+[31-May-2025 22:40:39 Europe/Berlin] handle_interest.php accessed - POST data: Array
+(
+    [programme_id] => 49
+    [redirect] => /student-course-hub/student/explore_programmes
+    [action] => register
+)
+
+[31-May-2025 22:40:39 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 22:40:39 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 22:40:39 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 22:40:39 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[31-May-2025 22:40:39 Europe/Berlin] Parameters: Array
+(
+)
+
+[31-May-2025 22:40:39 Europe/Berlin] Found 10 programmes
+[31-May-2025 22:40:53 Europe/Berlin] handle_interest.php accessed - POST data: Array
+(
+    [programme_id] => 49
+    [redirect] => /student-course-hub/student/explore_programmes
+    [action] => register
+)
+
+[31-May-2025 22:40:53 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 22:40:53 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 22:40:53 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 22:40:53 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[31-May-2025 22:40:53 Europe/Berlin] Parameters: Array
+(
+)
+
+[31-May-2025 22:40:53 Europe/Berlin] Found 10 programmes
+[31-May-2025 22:40:57 Europe/Berlin] handle_interest.php accessed - POST data: Array
+(
+    [programme_id] => 46
+    [redirect] => /student-course-hub/student/explore_programmes
+    [action] => register
+)
+
+[31-May-2025 22:40:57 Europe/Berlin] StudentController: Attempting to add interest - Student ID: 8, Programme ID: 46
+[31-May-2025 22:40:57 Europe/Berlin] StudentController: Successfully added interest
+[31-May-2025 22:40:57 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 22:40:57 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 22:40:57 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 22:40:57 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[31-May-2025 22:40:57 Europe/Berlin] Parameters: Array
+(
+)
+
+[31-May-2025 22:40:57 Europe/Berlin] Found 10 programmes
+[31-May-2025 22:50:24 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 22:50:24 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 22:50:24 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 22:50:24 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[31-May-2025 22:50:24 Europe/Berlin] Parameters: Array
+(
+)
+
+[31-May-2025 22:50:24 Europe/Berlin] Found 10 programmes
+[31-May-2025 22:56:23 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 22:56:23 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 22:56:23 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 22:56:23 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[31-May-2025 22:56:23 Europe/Berlin] Parameters: Array
+(
+)
+
+[31-May-2025 22:56:23 Europe/Berlin] Found 10 programmes
+[31-May-2025 23:04:08 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 23:04:08 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 23:04:08 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 23:04:08 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[31-May-2025 23:04:08 Europe/Berlin] Parameters: Array
+(
+)
+
+[31-May-2025 23:04:08 Europe/Berlin] Found 10 programmes
+[31-May-2025 23:36:02 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 23:36:02 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 23:36:02 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 23:36:02 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[31-May-2025 23:36:02 Europe/Berlin] Parameters: Array
+(
+)
+
+[31-May-2025 23:36:02 Europe/Berlin] Found 10 programmes
+[31-May-2025 23:36:09 Europe/Berlin] Starting searchProgrammes with query: 
+[31-May-2025 23:36:09 Europe/Berlin] Filters: Array
+(
+)
+
+[31-May-2025 23:36:09 Europe/Berlin] Total programmes in database: 10
+[31-May-2025 23:36:09 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[31-May-2025 23:36:09 Europe/Berlin] Parameters: Array
+(
+)
+
+[31-May-2025 23:36:09 Europe/Berlin] Found 10 programmes
+[31-May-2025 23:43:31 Europe/Berlin] PHP Fatal error:  Cannot redeclare App\Controllers\StudentController::viewInterests() in C:\xampp\htdocs\student-course-hub\src\controllers\StudentController.php on line 901
+[31-May-2025 23:45:57 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined method App\Controllers\StudentController::getStudentInterests() in C:\xampp\htdocs\student-course-hub\src\views\student\manage_interests.php:16
+Stack trace:
+#0 C:\xampp\htdocs\student-course-hub\src\controllers\StudentController.php(48): require_once()
+#1 C:\xampp\htdocs\student-course-hub\index.php(118): App\Controllers\StudentController->viewInterests()
+#2 {main}
+  thrown in C:\xampp\htdocs\student-course-hub\src\views\student\manage_interests.php on line 16
+[01-Jun-2025 00:00:27 Europe/Berlin] Starting searchProgrammes with query: 
+[01-Jun-2025 00:00:27 Europe/Berlin] Filters: Array
+(
+)
+
+[01-Jun-2025 00:00:27 Europe/Berlin] Total programmes in database: 10
+[01-Jun-2025 00:00:27 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[01-Jun-2025 00:00:27 Europe/Berlin] Parameters: Array
+(
+)
+
+[01-Jun-2025 00:00:27 Europe/Berlin] Found 10 programmes
+[01-Jun-2025 00:00:34 Europe/Berlin] handle_interest.php accessed - POST data: Array
+(
+    [programme_id] => 43
+    [redirect] => /student-course-hub/student/explore_programmes
+    [action] => register
+)
+
+[01-Jun-2025 00:00:34 Europe/Berlin] StudentController: Attempting to add interest - Student ID: 8, Programme ID: 43
+[01-Jun-2025 00:00:34 Europe/Berlin] StudentController: Successfully added interest
+[01-Jun-2025 00:00:34 Europe/Berlin] Starting searchProgrammes with query: 
+[01-Jun-2025 00:00:34 Europe/Berlin] Filters: Array
+(
+)
+
+[01-Jun-2025 00:00:34 Europe/Berlin] Total programmes in database: 10
+[01-Jun-2025 00:00:34 Europe/Berlin] Final SQL: SELECT p.*
+                FROM programmes p 
+                WHERE p.is_published = 1 ORDER BY p.title ASC
+[01-Jun-2025 00:00:34 Europe/Berlin] Parameters: Array
+(
+)
+
+[01-Jun-2025 00:00:34 Europe/Berlin] Found 10 programmes

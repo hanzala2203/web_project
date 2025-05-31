@@ -26,20 +26,99 @@ class StudentController extends Model {
         }
     }
 
+    public function viewInterests() {
+        try {
+            if (!isset($_SESSION['user_id'])) {
+                header('Location: ' . BASE_URL . '/auth/login');
+                exit;
+            }
+
+            $studentId = $_SESSION['user_id'];
+            
+            // Get student's interests with detailed programme information
+            try {
+                $interests = $this->student->getStudentInterests($studentId);
+            } catch (\Exception $e) {
+                error_log("Error getting student interests: " . $e->getMessage());
+                $interests = [];
+            }
+            
+            // Show the view with the interests data
+            extract(['interests' => $interests]);
+            require_once __DIR__ . '/../views/student/manage_interests.php';
+            
+        } catch (\Exception $e) {
+            error_log("Error in viewInterests: " . $e->getMessage());
+            $_SESSION['error'] = "An error occurred while loading your interests.";
+            header('Location: ' . BASE_URL . '/error');
+            exit;
+        }
+    }
+
+    public function handleInterest() {
+        try {
+            if (!isset($_SESSION['user_id'])) {
+                header('Location: ' . BASE_URL . '/auth/login');
+                exit;
+            }
+
+            if (!isset($_POST['programme_id'])) {
+                $_SESSION['error'] = 'Programme ID is required';
+                header('Location: ' . BASE_URL . '/student/explore_programmes');
+                exit;
+            }
+
+            $studentId = $_SESSION['user_id'];
+            $programmeId = $_POST['programme_id'];
+            $action = $_POST['action'] ?? 'register';
+            $redirect = $_POST['redirect'] ?? BASE_URL . '/student/programme_details?id=' . $programmeId;
+
+            try {
+                if ($action === 'withdraw') {
+                    if (!$this->student->hasInterest($studentId, $programmeId)) {
+                        $_SESSION['error'] = 'You have not registered interest in this programme';
+                    } else if ($this->student->removeInterest($studentId, $programmeId)) {
+                        $_SESSION['success'] = 'Successfully withdrew interest from the programme';
+                    } else {
+                        $_SESSION['error'] = 'Failed to withdraw interest';
+                    }
+                } else {
+                    if ($this->student->hasInterest($studentId, $programmeId)) {
+                        $_SESSION['error'] = 'You have already registered interest in this programme';
+                    } else if ($this->student->addInterest($studentId, $programmeId)) {
+                        $_SESSION['success'] = 'Successfully registered interest in the programme';
+                    } else {
+                        $_SESSION['error'] = 'Failed to register interest';
+                    }
+                }
+            } catch (\Exception $e) {
+                $_SESSION['error'] = $e->getMessage();
+            }
+
+            header('Location: ' . $redirect);
+            exit;
+        } catch (\Exception $e) {
+            error_log('Error in handleInterest: ' . $e->getMessage());
+            $_SESSION['error'] = 'An error occurred while processing your request';
+            header('Location: ' . BASE_URL . '/student/explore_programmes');
+            exit;
+        }
+    }
+
     public function registerInterest($studentId, $programmeId) {
         try {
             // Validate inputs
             if (!$this->programme->exists($programmeId)) {
-                throw new Exception("Programme not found");
+                throw new \Exception("Programme not found");
             }
 
             if (!$this->student->exists($studentId)) {
-                throw new Exception("Student not found");
+                throw new \Exception("Student not found");
             }
 
             // Check if already registered
             if ($this->student->hasInterest($studentId, $programmeId)) {
-                throw new Exception("Already registered interest in this programme");
+                throw new \Exception("Already registered interest in this programme");
             }
 
             // Log the attempt
@@ -61,6 +140,10 @@ class StudentController extends Model {
             throw new Exception("Failed to register interest: " . $e->getMessage());
         }
     }
+
+
+
+
 
     public function withdrawInterest($studentId, $programmeId) {
         try {
@@ -194,9 +277,9 @@ class StudentController extends Model {
             }
 
             try {
-                $interestedCourses = $this->student->getInterestedCourses($studentId);
+                $interestedCourses = $this->student->getInterestedProgrammes($studentId);
             } catch (\Exception $e) {
-                error_log("Error getting interested courses: " . $e->getMessage());
+                error_log("Error getting interested programmes: " . $e->getMessage());
                 $interestedCourses = [];
             }
 
@@ -275,9 +358,9 @@ class StudentController extends Model {
             }
 
             try {
-                $interestedCourses = $this->student->getInterestedCourses($studentId);
+                $interestedCourses = $this->student->getInterestedProgrammes($studentId);
             } catch (\Exception $e) {
-                error_log("Error getting interested courses: " . $e->getMessage());
+                error_log("Error getting interested programmes: " . $e->getMessage());
                 $interestedCourses = [];
             }
 
@@ -420,8 +503,8 @@ class StudentController extends Model {
 
     private function getRecommendedCourses($studentId) {
         try {
-            // Get student's interested courses
-            $interests = $this->student->getInterestedCourses($studentId);
+            // Get student's interested programmes
+            $interests = $this->student->getInterestedProgrammes($studentId);
             
             // For now, return empty array until recommendation system is implemented
             return [];
@@ -813,90 +896,126 @@ class StudentController extends Model {
         return $total;
     }
 
-
-
-    public function viewInterests() {
+    public function handleRegisterInterest() {
         try {
-            // Check if user is logged in
             if (!isset($_SESSION['user_id'])) {
                 header('Location: ' . BASE_URL . '/auth/login');
                 exit;
             }
 
-            $studentId = $_SESSION['user_id'];
-            
-            // Get student's interests with detailed programme information
-            $interests = $this->student->getInterests($studentId);
-            
-            // Get all available programmes for comparison
-            $allProgrammes = $this->programme->getAllPublished();
-            
-            // Prepare data for view
-            $data = [
-                'interests' => $interests,
-                'allProgrammes' => $allProgrammes
-            ];
+            if (!isset($_POST['programme_id'])) {
+                $_SESSION['error'] = 'Programme ID is required';
+                header('Location: ' . BASE_URL . '/student/explore_programmes');
+                exit;
+            }
 
-            // Extract data to make it available in the view
-            extract($data);
-            
-            require_once BASE_PATH . '/src/views/student/manage_interests.php';
+            $studentId = $_SESSION['user_id'];
+            $programmeId = $_POST['programme_id'];
+
+            if ($this->student->hasInterest($studentId, $programmeId)) {
+                $_SESSION['error'] = 'You have already registered interest in this programme';
+            } else if ($this->student->addInterest($studentId, $programmeId)) {
+                $_SESSION['success'] = 'Successfully registered interest in the programme';
+            } else {
+                $_SESSION['error'] = 'Failed to register interest';
+            }
+
+            header('Location: ' . BASE_URL . '/student/programme_details?id=' . $programmeId);
+            exit;
         } catch (\Exception $e) {
-            error_log("Error in viewInterests: " . $e->getMessage());
-            $_SESSION['error'] = "An error occurred while loading your interests.";
+            error_log('Error in handleRegisterInterest: ' . $e->getMessage());
+            $_SESSION['error'] = 'An error occurred while processing your request';
             header('Location: ' . BASE_URL . '/error');
             exit;
         }
     }
 
-    public function getSharedModules($programmeId) {
+    public function handleWithdrawInterest() {
         try {
-            // Get all modules for this programme
-            $modules = $this->programme->getModules($programmeId);
-            
-            $sharedModules = [];
-            foreach ($modules as $module) {
-                // Get other programmes that share this module
-                $sharedProgrammes = $this->module->getSharedProgrammes($module['id']);
-                if (count($sharedProgrammes) > 1) { // More than 1 means shared
-                    $module['shared_with'] = array_filter($sharedProgrammes, function($p) use ($programmeId) {
-                        return $p['id'] != $programmeId;
-                    });
-                    $sharedModules[] = $module;
-                }
+            if (!isset($_SESSION['user_id'])) {
+                header('Location: ' . BASE_URL . '/auth/login');
+                exit;
             }
-            
-            // Add any modules from other programmes that are shared with this one
-            $stmt = $this->db->prepare("
-                SELECT DISTINCT m.*
-                FROM modules m
-                INNER JOIN programme_modules pm1 ON m.id = pm1.module_id
-                INNER JOIN programme_modules pm2 ON m.id = pm2.module_id
-                WHERE pm1.programme_id = :programme_id
-                AND pm2.programme_id != :programme_id
-            ");
-            $stmt->execute([':programme_id' => $programmeId]);
-            $additionalModules = $stmt->fetchAll();
-            
-            // Merge the results, avoiding duplicates
-            foreach ($additionalModules as $module) {
-                $exists = false;
-                foreach ($sharedModules as $existingModule) {
-                    if ($existingModule['id'] === $module['id']) {
-                        $exists = true;
-                        break;
-                    }
-                }
-                if (!$exists) {
-                    $sharedModules[] = $module;
-                }
+
+            if (!isset($_POST['programme_id'])) {
+                $_SESSION['error'] = 'Programme ID is required';
+                header('Location: ' . BASE_URL . '/student/my_interests');
+                exit;
             }
-            
-            return $sharedModules;
-            
+
+            $studentId = $_SESSION['user_id'];
+            $programmeId = $_POST['programme_id'];
+
+            if (!$this->student->hasInterest($studentId, $programmeId)) {
+                $_SESSION['error'] = 'You have not registered interest in this programme';
+            } else if ($this->student->removeInterest($studentId, $programmeId)) {
+                $_SESSION['success'] = 'Successfully withdrew interest from the programme';
+            } else {
+                $_SESSION['error'] = 'Failed to withdraw interest';
+            }
+
+            // Redirect back to referring page
+            $referer = $_SERVER['HTTP_REFERER'] ?? BASE_URL . '/student/my_interests';
+            header('Location: ' . $referer);
+            exit;
         } catch (\Exception $e) {
-            error_log("Error getting shared modules: " . $e->getMessage());
-            return []; // Return empty array instead of throwing to maintain consistency
+            error_log('Error in handleWithdrawInterest: ' . $e->getMessage());
+            $_SESSION['error'] = 'An error occurred while processing your request';
+            header('Location: ' . BASE_URL . '/error');
+            exit;
+        }
+    }
+
+    public function getInterests($studentId) {
+        try {
+            if (!isset($studentId)) {
+                throw new \Exception("Student ID is required");
+            }
+
+            $query = "SELECT p.*, si.created_at as interest_date 
+                     FROM programmes p 
+                     JOIN student_interests si ON p.id = si.programme_id 
+                     WHERE si.student_id = :student_id 
+                     ORDER BY si.created_at DESC";
+            
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':student_id', $studentId);
+            $stmt->execute();
+            
+            $interests = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            
+            // Add default image if not set
+            foreach ($interests as &$programme) {
+                $programme['image_url'] = $programme['image_url'] ?? '/assets/images/default-programme.jpg';
+            }
+            
+            return $interests;
+        } catch (\Exception $e) {
+            error_log("Error getting interests: " . $e->getMessage());
+            throw new \Exception("Failed to retrieve interests");
+        }
+    }
+
+    public function getStudentDetails($studentId) {
+        try {
+            if (!isset($studentId)) {
+                throw new \Exception("Student ID is required");
+            }
+
+            $query = "SELECT * FROM users WHERE id = :student_id AND role = 'student'";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':student_id', $studentId);
+            $stmt->execute();
+            
+            $student = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if (!$student) {
+                throw new \Exception("Student not found");
+            }
+            
+            return $student;
+        } catch (\Exception $e) {
+            error_log("Error getting student details: " . $e->getMessage());
+            throw new \Exception("Failed to retrieve student details");
         }
     }
 }
