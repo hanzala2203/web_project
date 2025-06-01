@@ -3,6 +3,16 @@ $pageTitle = "Manage Modules";
 $headerText = "Modules";
 $breadcrumbText = "Manage Modules";
 $activeMenu = "modules";
+
+error_log("=== Admin Modules View START ===");
+error_log("Time: " . date('Y-m-d H:i:s'));
+error_log("Modules variable set: " . (isset($modules) ? 'yes' : 'no'));
+if (isset($modules)) {
+    error_log("Number of modules: " . count($modules));
+    if (!empty($modules)) {
+        error_log("First module data: " . print_r($modules[0], true));
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -48,9 +58,14 @@ $activeMenu = "modules";
                     <a href="/student-course-hub/admin/modules/create" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Create New Module
                     </a>
-                </div>
-
-                <div class="table-responsive">
+                </div>                <div class="table-responsive">
+                    <?php 
+                    error_log("Modules in view: " . print_r($modules ?? 'No modules variable', true));
+                    if (empty($modules)): ?>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> No modules found in the system.
+                        </div>
+                    <?php else: ?>
                     <table class="table">
                         <thead>
                             <tr>
@@ -62,11 +77,12 @@ $activeMenu = "modules";
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <?php if (!empty($modules)): ?>
+                        <tbody>                            <?php
+                                error_log("Modules array in view: " . print_r($modules ?? 'No modules variable', true));
+                                if (!empty($modules)): ?>
                                 <?php foreach ($modules as $module): ?>
                                     <tr>
-                                        <td><?php echo htmlspecialchars($module['title']); ?></td>
+                                        <td><?php echo htmlspecialchars($module['title'] ?? 'No Title'); ?></td>
                                         <td><?php echo htmlspecialchars($module['programme_name'] ?? 'Not Assigned'); ?></td>
                                         <td><?php echo $module['credits'] ?? 'N/A'; ?></td>
                                         <td><?php echo $module['year_of_study'] ?? 'N/A'; ?></td>
@@ -80,16 +96,12 @@ $activeMenu = "modules";
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </form>
-                                        </td>
-                                    </tr>
+                                        </td>                                    </tr>
                                 <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="6" class="text-center">No modules found</td>
-                                </tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
+                    <?php endif; ?>
                 </div>
             </div>
         </main>

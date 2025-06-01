@@ -737,14 +737,20 @@ label {
                                                 </span>
                                             </td>
                                             <td class="table-actions">
-                                                <a href="/student-course-hub/admin/programmes/<?php echo $programme['id']; ?>/edit" class="btn btn-sm btn-info" title="Edit">
-                                                    <i class="fas fa-edit"></i>
+                                                <a href="/student-course-hub/admin/programmes/<?php echo htmlspecialchars($programme['id']); ?>/view" class="btn btn-sm btn-info mr-2">
+                                                    <i class="fas fa-eye"></i> View
                                                 </a>
-                                                <form method="POST" action="/student-course-hub/admin/programmes/<?php echo $programme['id']; ?>/delete" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this programme? This action cannot be undone.');">
-                                                    <button type="submit" class="btn btn-sm btn-danger" title="Delete">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
+                                                <a href="/student-course-hub/admin/programmes/<?php echo htmlspecialchars($programme['id']); ?>/students" class="btn btn-sm btn-success mr-2">
+                                                    <i class="fas fa-users"></i> View Students
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-primary mr-2" onclick="editProgramme(<?php echo $programme['id']; ?>)">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-danger" onclick="deleteProgramme(<?php echo $programme['id']; ?>)">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
+
+                                                <!-- ...existing code... -->
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

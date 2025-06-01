@@ -231,12 +231,13 @@ switch ($path) {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             require_once BASE_PATH . '/src/views/student/handle_interest.php';
         }
-        break;    case '/student/withdraw_interest':
+        break;
+    case '/student/withdraw_interest':
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $student = new \App\Controllers\StudentController();
             $student->handleWithdrawInterest();
         } else {
-            header('Location: ' . BASE_URL . '/student/manage_interests');
+            header('Location: ' . BASE_URL . '/student/withdraw_interest');
             exit;
         }
         break;

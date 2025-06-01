@@ -1,0 +1,162 @@
+=== START MODULE CHECK ===
+2025-06-01 11:37:08
+[01-Jun-2025 11:37:08 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type int in C:\xampp\htdocs\student-course-hub\check_modules_direct.php on line 16
+[01-Jun-2025 11:37:08 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type int in C:\xampp\htdocs\student-course-hub\check_modules_direct.php on line 16
+[01-Jun-2025 11:37:08 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type int in C:\xampp\htdocs\student-course-hub\check_modules_direct.php on line 17
+[01-Jun-2025 11:37:08 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type int in C:\xampp\htdocs\student-course-hub\check_modules_direct.php on line 17
+Database error: SQLSTATE[HY000] [1045] Access denied for user ''@'localhost' (using password: NO)
+=== START MODULE CHECK ===
+2025-06-01 11:39:16
+Database connected successfully
+Modules table exists
+Total modules: 22
+Sample modules:
+Array
+(
+    [0] => Array
+        (
+            [id] => 69
+            [title] => Programming Fundamentals
+            [description] => Introduction to programming concepts using Python
+            [credits] => 15
+            [year_of_study] => 1
+            [semester] => 1
+            [staff_id] => 
+            [created_at] => 2025-05-31 18:16:50
+        )
+
+    [1] => Array
+        (
+            [id] => 70
+            [title] => Data Structures & Algorithms
+            [description] => Essential data structures and algorithm analysis
+            [credits] => 15
+            [year_of_study] => 1
+            [semester] => 2
+            [staff_id] => 
+            [created_at] => 2025-05-31 18:16:50
+        )
+
+    [2] => Array
+        (
+            [id] => 71
+            [title] => Database Systems
+            [description] => Database design and SQL programming
+            [credits] => 15
+            [year_of_study] => 2
+            [semester] => 1
+            [staff_id] => 
+            [created_at] => 2025-05-31 18:16:50
+        )
+
+    [3] => Array
+        (
+            [id] => 72
+            [title] => Web Development
+            [description] => Full-stack web application development
+            [credits] => 15
+            [year_of_study] => 2
+            [semester] => 2
+            [staff_id] => 
+            [created_at] => 2025-05-31 18:16:50
+        )
+
+    [4] => Array
+        (
+            [id] => 73
+            [title] => Artificial Intelligence
+            [description] => AI principles and applications
+            [credits] => 15
+            [year_of_study] => 3
+            [semester] => 1
+            [staff_id] => 
+            [created_at] => 2025-05-31 18:16:50
+        )
+
+)
+
+Table structure:
+Array
+(
+    [0] => Array
+        (
+            [Field] => id
+            [Type] => int(11)
+            [Null] => NO
+            [Key] => PRI
+            [Default] => 
+            [Extra] => auto_increment
+        )
+
+    [1] => Array
+        (
+            [Field] => title
+            [Type] => varchar(200)
+            [Null] => NO
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [2] => Array
+        (
+            [Field] => description
+            [Type] => text
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [3] => Array
+        (
+            [Field] => credits
+            [Type] => int(11)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [4] => Array
+        (
+            [Field] => year_of_study
+            [Type] => int(11)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [5] => Array
+        (
+            [Field] => semester
+            [Type] => int(11)
+            [Null] => YES
+            [Key] => 
+            [Default] => 1
+            [Extra] => 
+        )
+
+    [6] => Array
+        (
+            [Field] => staff_id
+            [Type] => int(11)
+            [Null] => YES
+            [Key] => MUL
+            [Default] => 
+            [Extra] => 
+        )
+
+    [7] => Array
+        (
+            [Field] => created_at
+            [Type] => timestamp
+            [Null] => NO
+            [Key] => 
+            [Default] => current_timestamp()
+            [Extra] => 
+        )
+
+)
+
