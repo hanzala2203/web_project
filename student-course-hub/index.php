@@ -123,7 +123,7 @@ switch ($path) {
             $student = new \App\Controllers\StudentController();
             $student->handleWithdrawInterest();
         } else {
-            header('Location: ' . BASE_URL . '/student/manage_interests');
+            header('Location: ' . BASE_URL . '/student/withdraw_interest');
             exit;
         }
         break;
@@ -135,17 +135,22 @@ switch ($path) {
         break;
         
     case '/admin/programmes':
-        require_once BASE_PATH . '/src/views/admin/programmes.php';
+        require_once BASE_PATH . '/src/controllers/AdminController.php';
+        $controller = new \App\Controllers\AdminController();
+        $controller->listProgrammes();
         break;
         
     case '/admin/modules':
-        require_once BASE_PATH . '/src/views/admin/modules.php';
+        $admin = new \App\Controllers\AdminController();
+        $admin->listModules();
         break;
         
     case '/admin/students':
-        require_once BASE_PATH . '/src/views/admin/students.php';
+        require_once BASE_PATH . '/src/controllers/AdminController.php';
+        $controller = new \App\Controllers\AdminController();
+        $controller->listStudents();
         break;
-        
+
     case '/admin/staff':
         require_once BASE_PATH . '/src/views/admin/staff.php';
         break;

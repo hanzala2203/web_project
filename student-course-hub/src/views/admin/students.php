@@ -4,6 +4,14 @@
 if (!isset($pageTitle)) {
     $pageTitle = "Admin - Students"; // Default title
 }
+
+error_log("=== admin/students.php view START ===");
+error_log("Students data received: " . (isset($students) ? count($students) : 'none'));
+error_log("Programmes data received: " . (isset($programmes) ? count($programmes) : 'none'));
+
+if (!isset($students) || !isset($programmes)) {
+    error_log("WARNING: Required data not passed to view"); 
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -757,8 +765,20 @@ label {
                 </form>
             </div>
             <div class="card-body admin-card-body">
+                <?php 
+    error_log("View - students variable: " . (isset($students) ? "set" : "not set"));
+    if (isset($students)) {
+        error_log("View - student count: " . count($students));
+    }
+?>
                 <?php if (empty($students)) : ?>
-                    <div class="alert alert-info">No students found.</div>
+                    <div class="alert alert-info">
+                        <?php if (!empty($search) || !empty($selectedProgramme)) : ?>
+                            No students found matching your search criteria.
+                        <?php else : ?>
+                            No students found in the system.
+                        <?php endif; ?>
+                    </div>
                 <?php else : ?>
                     <div class="table-responsive">
                         <table class="table table-striped table-hover admin-table">
@@ -768,37 +788,20 @@ label {
                                     <th>Username</th>
                                     <th>Email</th>
                                     <th>Role</th>
-                                    <th>Interested Programmes</th>
+                                    <!-- <th>Interested Programmes</th>  -->
                                     <th>Registered At</th>
-                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($students as $student) : ?>
                                     <tr>
-                                        <td><?php echo htmlspecialchars($student['id']); ?></td>
-                                        <td><?php echo htmlspecialchars($student['username']); ?></td>
-                                        <td><?php echo htmlspecialchars($student['email']); ?></td>
+                                        <td><?php echo htmlspecialchars($student['id'] ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($student['username'] ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($student['email'] ?? 'N/A'); ?></td>
                                         <td><span class="badge <?php echo $student['role'] === 'student' ? 'badge-primary' : 'badge-danger'; ?>"><?php echo ucfirst(htmlspecialchars($student['role'])); ?></span></td>
-                                        <td>
-                                            <?php if (!empty($student['interests'])) : ?>
-                                                <?php foreach ($student['interests'] as $interest) : ?>
-                                                    <span class="badge badge-info"><?php echo htmlspecialchars($interest['title']); ?></span>
-                                                <?php endforeach; ?>
-                                            <?php else : ?>
-                                                <span class="text-muted">N/A</span>
-                                            <?php endif; ?>
-                                        </td>
+                                        
                                         <td><?php echo htmlspecialchars(date('d M Y, H:i', strtotime($student['created_at']))); ?></td>
-                                        <td class="table-actions">
-                                            <!-- Placeholder for view/edit/delete actions if they become available -->
-                                            <!-- <a href="/admin/students/view/<?php echo htmlspecialchars($student['id']); ?>" class="btn btn-sm btn-icon btn-info" title="View Details"><i class="fas fa-eye"></i></a> -->
-                                            <!-- <a href="/admin/students/edit/<?php echo htmlspecialchars($student['id']); ?>" class="btn btn-sm btn-icon btn-warning" title="Edit Student"><i class="fas fa-edit"></i></a> -->
-                                            <!-- <form action="/admin/students/delete/<?php echo htmlspecialchars($student['id']); ?>" method="POST" style="display: inline-block;" onsubmit="return confirm('Are you sure you want to delete this student?');">
-                                                <button type="submit" class="btn btn-sm btn-icon btn-danger" title="Delete Student"><i class="fas fa-trash"></i></button>
-                                            </form> -->
-                                            <span class="text-muted">No actions available</span>
-                                        </td>
+                                        
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
