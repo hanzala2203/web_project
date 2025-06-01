@@ -123,35 +123,219 @@ class AdminController
         }
     }
 
-    // Student Management
+    // // Student Management
+    // public function listStudents()
+    // {
+    //     try {
+    //         // Start with debugging info
+    //         error_log("\n\n=== AdminController::listStudents START ===");
+    //         error_log("Time: " . date('Y-m-d H:i:s'));
+    //         error_log("Session data: " . print_r($_SESSION, true));
+            
+    //         // Initialize variables
+    //         $filters = [];
+    //         $search = '';
+    //         $selectedProgramme = '';
+            
+    //         // Get search filters from GET parameters
+    //         if (!empty($_GET['search'])) {
+    //             $filters['search'] = $_GET['search'];
+    //             $search = $_GET['search'];
+    //             error_log("Search filter: " . $_GET['search']);
+    //         }
+            
+    //         if (!empty($_GET['programme'])) {
+    //             $filters['programme'] = $_GET['programme'];
+    //             $selectedProgramme = $_GET['programme'];
+    //             error_log("Programme filter: " . $_GET['programme']);
+    //         }
+            
+    //         // Handle data export
+    //         if (isset($_GET['action']) && $_GET['action'] === 'export') {
+    //             error_log("Handling export request");
+    //             return $this->exportStudentData($filters);
+    //         }
+            
+    //         // Fetch students with error handling
+    //         error_log("About to call getAllStudents with filters: " . print_r($filters, true));
+    //         $students = $this->student->getAllStudents($filters);
+            
+    //         // Debug the returned data
+    //         error_log("Raw students data returned: " . print_r($students, true));
+            
+    //         if ($students === false || $students === null) {
+    //             error_log("getAllStudents() returned false or null");
+    //             $students = [];
+    //         }
+    //         error_log("Found " . count($students) . " students");
+            
+    //         // Verify student data structure
+    //         if (!empty($students)) {
+    //             error_log("First student data: " . print_r($students[0], true));
+    //         }
+            
+    //         // Fetch programmes with error handling
+    //         try {
+    //             $programmes = $this->programme->getAllProgrammes();
+    //             if ($programmes === false || $programmes === null) {
+    //                 error_log("getAllProgrammes() returned false or null");
+    //                 $programmes = [];
+    //             }
+    //         } catch (\Exception $e) {
+    //             error_log("Error fetching programmes: " . $e->getMessage());
+    //             $programmes = [];
+    //         }
+            
+    //         error_log("Found " . count($programmes) . " programmes");
+            
+    //         // Debug what we're passing to the view
+    //         error_log("Passing to view - students: " . count($students) . ", programmes: " . count($programmes));
+    //         error_log("Search: " . $search . ", Selected Programme: " . $selectedProgramme);
+            
+    //         error_log("About to include view with data:");
+    //         error_log("students count: " . count($students));
+    //         error_log("programmes count: " . count($programmes));
+    //         error_log("search: " . $search);
+    //         error_log("selectedProgramme: " . $selectedProgramme);
+            
+    //         // Ensure all variables are defined
+    //         $pageTitle = "Manage Students";
+            
+    //         // Extract all variables into local scope
+    //         extract([
+    //             'students' => $students,
+    //             'programmes' => $programmes,
+    //             'search' => $search,
+    //             'selectedProgramme' => $selectedProgramme,
+    //             'pageTitle' => $pageTitle
+    //         ]);
+            
+    //         // Include with explicit scope
+    //         include BASE_PATH . '/src/views/admin/students.php';
+            
+    //     } catch (\Exception $e) {
+    //         error_log("Error in AdminController::listStudents: " . $e->getMessage());
+    //         $_SESSION['error_message'] = "Error loading students: " . $e->getMessage();
+    //         include BASE_PATH . '/src/views/admin/students.php';
+    //     }
+    // }
     public function listStudents()
     {
-        $filters = [];
-        
-        // Get search filters from GET parameters
-        if (!empty($_GET['search'])) {
-            $filters['search'] = $_GET['search'];
+        try {
+            // Start with debugging info
+            echo "<script>console.log('=== AdminController::listStudents START ===');</script>";
+            echo "<script>console.log('Time: " . date('Y-m-d H:i:s') . "');</script>";
+            echo "<script>console.log('Session data: " . addslashes(json_encode($_SESSION)) . "');</script>";
+            error_log("\n\n=== AdminController::listStudents START ===");
+            error_log("Time: " . date('Y-m-d H:i:s'));
+            error_log("Session data: " . print_r($_SESSION, true));
+            
+            // Initialize variables
+            $filters = [];
+            $search = '';
+            $selectedProgramme = '';
+            
+            // Get search filters from GET parameters
+            if (!empty($_GET['search'])) {
+                $filters['search'] = $_GET['search'];
+                $search = $_GET['search'];
+                echo "<script>console.log('Search filter: " . addslashes($_GET['search']) . "');</script>";
+                error_log("Search filter: " . $_GET['search']);
+            }
+            
+            if (!empty($_GET['programme'])) {
+                $filters['programme'] = $_GET['programme'];
+                $selectedProgramme = $_GET['programme'];
+                echo "<script>console.log('Programme filter: " . addslashes($_GET['programme']) . "');</script>";
+                error_log("Programme filter: " . $_GET['programme']);
+            }
+            
+            // Handle data export
+            if (isset($_GET['action']) && $_GET['action'] === 'export') {
+                echo "<script>console.log('Handling export request');</script>";
+                error_log("Handling export request");
+                return $this->exportStudentData($filters);
+            }
+            
+            // Fetch students with error handling
+            echo "<script>console.log('About to call getAllStudents with filters: " . addslashes(json_encode($filters)) . "');</script>";
+            error_log("About to call getAllStudents with filters: " . print_r($filters, true));
+            $students = $this->student->getAllStudents($filters);
+            
+            // Debug the returned data
+            echo "<script>console.log('Raw students data returned: " . addslashes(json_encode($students)) . "');</script>";
+            error_log("Raw students data returned: " . print_r($students, true));
+            
+            if ($students === false || $students === null) {
+                echo "<script>console.log('getAllStudents() returned false or null');</script>";
+                error_log("getAllStudents() returned false or null");
+                $students = [];
+            }
+            echo "<script>console.log('Found " . count($students) . " students');</script>";
+            error_log("Found " . count($students) . " students");
+            
+            // Verify student data structure
+            if (!empty($students)) {
+                echo "<script>console.log('First student data: " . addslashes(json_encode($students[0])) . "');</script>";
+                error_log("First student data: " . print_r($students[0], true));
+            }
+            
+            // Fetch programmes with error handling
+            try {
+                $programmes = $this->programme->getAllProgrammes(true);
+                if ($programmes === false || $programmes === null) {
+                    echo "<script>console.log('getAllProgrammes() returned false or null');</script>";
+                    error_log("getAllProgrammes() returned false or null");
+                    $programmes = [];
+                }
+            } catch (\Exception $e) {
+                echo "<script>console.log('Error fetching programmes: " . $e->getMessage() . "');</script>";
+                error_log("Error fetching programmes: " . $e->getMessage());
+                $programmes = [];
+            }
+            
+            echo "<script>console.log('Found " . count($programmes) . " programmes');</script>";
+            error_log("Found " . count($programmes) . " programmes");
+            
+            // Debug what we’re passing to the view
+            echo "<script>console.log('Passing to view - students: " . count($students) . ", programmes: " . count($programmes) . "');</script>";
+            echo "<script>console.log('Search: " . addslashes($search) . ", Selected Programme: " . addslashes($selectedProgramme) . "');</script>";
+            error_log("Passing to view - students: " . count($students) . ", programmes: " . count($programmes));
+            error_log("Search: " . $search . ", Selected Programme: " . $selectedProgramme);
+            
+            error_log("About to include view with data:");
+            echo "<script>console.log('About to include view with data:');</script>";
+            echo "<script>console.log('students count: ' + " . count($students) . ");</script>";
+            echo "<script>console.log('programmes count: ' + " . count($programmes) . ");</script>";
+            echo "<script>console.log('search: " . addslashes($search) . "');</script>";
+            echo "<script>console.log('selectedProgramme: " . addslashes($selectedProgramme) . "');</script>";
+            error_log("students count: " . count($students));
+            error_log("programmes count: " . count($programmes));
+            error_log("search: " . $search);
+            error_log("selectedProgramme: " . $selectedProgramme);
+            
+            // Ensure all variables are defined
+            $pageTitle = "Manage Students";
+            
+            // Extract all variables into local scope
+            extract([
+                'students' => $students,
+                'programmes' => $programmes,
+                'search' => $search,
+                'selectedProgramme' => $selectedProgramme,
+                'pageTitle' => $pageTitle
+            ]);
+            
+            // Include with explicit scope
+            include BASE_PATH . '/src/views/admin/students.php';
+            
+        } catch (\Exception $e) {
+            echo "<script>console.log('Error in AdminController::listStudents: " . addslashes($e->getMessage()) . "');</script>";
+            error_log("Error in AdminController::listStudents: " . $e->getMessage());
+            $_SESSION['error_message'] = "Error loading students: " . $e->getMessage();
+            include BASE_PATH . '/src/views/admin/students.php';
         }
-        
-        if (!empty($_GET['programme'])) {
-            $filters['programme'] = $_GET['programme'];
-        }
-        
-        // Handle data export
-        if (isset($_GET['action']) && $_GET['action'] === 'export') {
-            return $this->exportStudentData($filters);
-        }
-        
-        $students = $this->student->getAllStudents($filters);
-        $programmes = $this->programme->getAllProgrammes(); // For filter dropdown
-        
-        // Pass any search params back to the view
-        $search = $filters['search'] ?? '';
-        $selectedProgramme = $filters['programme'] ?? '';
-        
-        include BASE_PATH . '/src/views/admin/students.php';
     }
-    
     private function exportStudentData($filters = [])
     {
         $students = $this->student->getAllStudents($filters);
@@ -199,11 +383,43 @@ class AdminController
     }
 
     // Module Management
-    public function listModules() // Removed Request $request, Response $response arguments
+    public function listModules() 
     {
-        $modules = $this->module->getAllModules();
-        // Ensure $modules variable is available to the included view
-        include BASE_PATH . '/src/views/admin/modules.php'; // Changed to include PHP view
+        try {
+            error_log("=== ADMIN MODULES LIST START ===");
+            error_log("Time: " . date('Y-m-d H:i:s'));
+            
+            // Check admin authentication
+            if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+                error_log("Access denied - not an admin user. Session: " . print_r($_SESSION, true));
+                header('Location: /student-course-hub/login');
+                exit;
+            }
+            error_log("Admin authentication passed, user_id: " . $_SESSION['user_id']);
+            
+            if (!$this->module) {
+                error_log("Module model is not initialized in AdminController");
+                throw new \Exception("Module model not initialized");
+            }
+            
+            $modules = $this->module->getAllModules();
+            if (!$modules) {
+                error_log("No modules returned from getAllModules");
+                $modules = [];
+            } else {
+                error_log("Got " . count($modules) . " modules from getAllModules");
+                error_log("First module: " . print_r($modules[0] ?? null, true));
+            }
+            
+            // Ensure $modules variable is available to the included view
+            include BASE_PATH . '/src/views/admin/modules.php';
+            
+        } catch (\Exception $e) {
+            error_log("Error in AdminController::listModules: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            $_SESSION['error_message'] = "Error loading modules: " . $e->getMessage();
+            include BASE_PATH . '/src/views/admin/modules.php';
+        }
     }
 
     public function showCreateModuleForm()
@@ -448,20 +664,41 @@ class AdminController
 
     private function getDashboardStats(): array
     {
-        $programmeStats = $this->programme->getProgrammeStats();
-        $studentStats = $this->student->getStats();
-        $moduleStats = $this->module->getStats();
+        try {
+            $programmeStats = $this->programme->getProgrammeStats();
+            error_log("Programme stats: " . print_r($programmeStats, true));
+            
+            $studentStats = $this->student->getStats();
+            error_log("Student stats: " . print_r($studentStats, true));
+            
+            $moduleStats = $this->module->getStats();
+            error_log("Module stats: " . print_r($moduleStats, true));
 
-        return [
-            'total_programmes' => $programmeStats['total'],
-            'active_programmes' => $programmeStats['active'],
-            'total_students' => $studentStats['total'],
-            'new_students' => $studentStats['new_this_month'],
-            'pending_interests' => $studentStats['pending_interests'],
-            'total_modules' => $moduleStats['total'],
+            $stats = [
+                'total_programmes' => $programmeStats['total'],
+                'active_programmes' => $programmeStats['active'], 
+                'total_students' => $studentStats['total'],
+                'new_students' => $studentStats['new_this_month'],
+                'total_modules' => $moduleStats['total'],
             'active_modules' => $moduleStats['active'],
             'recent_activities' => $this->getRecentActivities()
-        ];
+            ];
+
+            error_log("Final stats array: " . print_r($stats, true));
+            return $stats;
+            
+        } catch (\Exception $e) {
+            error_log("Error getting dashboard stats: " . $e->getMessage());
+            return [
+                'total_programmes' => 0,
+                'active_programmes' => 0,
+                'total_students' => 0,
+                'new_students' => 0,
+                'total_modules' => 0,
+                'active_modules' => 0,
+                'recent_activities' => []
+            ];
+        }
     }
 
     private function getRecentActivities(): array
@@ -713,6 +950,25 @@ class AdminController
             }
         }
         return true;
+    }
+
+    public function showProgrammeStudents($programmeId) {
+        try {
+            $programme = $this->programme->findById($programmeId);
+            if (!$programme) {
+                throw new Exception("Programme not found");
+            }
+
+            $students = $this->programme->getProgrammeStudents($programmeId);
+            
+            include BASE_PATH . '/src/views/admin/programmes/students.php';
+            
+        } catch (Exception $e) {
+            error_log("Error showing programme students: " . $e->getMessage());
+            $_SESSION['error'] = "Failed to retrieve programme students";
+            header('Location: /student-course-hub/admin/programmes');
+            exit;
+        }
     }
 
 }

@@ -98,7 +98,7 @@ class Student extends Model {
             ");
             $result = $stmt->execute([
                 ':student_id' => $studentId,
-                ':programme_id' => $programmeId
+                ':programme_id' => $ProgrammeId
             ]);
 
             if (!$result) {
@@ -199,94 +199,299 @@ class Student extends Model {
 
     public function getStats() {
         try {
-            // Get total students count
-            $total = $this->db->query("SELECT COUNT(*) FROM {$this->table} WHERE role = 'student'")->fetchColumn();
+            // Get total count of students
+            $total = $this->db->query("
+                SELECT COUNT(*) 
+                FROM users 
+                WHERE role = 'student'"
+            )->fetchColumn();
             
-            // Get new students this month
-            $newThisMonth = $this->db->query(
-                "SELECT COUNT(*) FROM {$this->table} 
+            // Get new students in the last 30 days
+            $newThisMonth = $this->db->query("
+                SELECT COUNT(*) 
+                FROM users 
                 WHERE role = 'student' 
-                AND created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)"
+                AND created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)"
             )->fetchColumn();
             
-            // Get student interests count for the past week
-            $pendingInterests = $this->db->query(
-                "SELECT COUNT(*) FROM student_interests 
-                WHERE registered_at >= DATE_SUB(NOW(), INTERVAL 1 WEEK)"
-            )->fetchColumn();
+            error_log("Student stats - Total: $total, New: $newThisMonth");
             
             return [
-                'total' => $total,
-                'new_this_month' => $newThisMonth,
-                'pending_interests' => $pendingInterests
+                'total' => (int)$total,
+                'new_this_month' => (int)$newThisMonth
             ];
-        } catch (PDOException $e) {
-            error_log("Error getting student stats: " . $e->getMessage());
-            return [
-                'total' => 0,
-                'new_this_month' => 0,
-                'pending_interests' => 0
-            ];
+        } catch (\PDOException $e) {
+            error_log("Error in getStats: " . $e->getMessage());
+            return ['total' => 0, 'new_this_month' => 0];
         }
     }
 
+    // public function getAllStudents($filters = []) {
+    //     try {
+    //         date_default_timezone_set('Asia/Karachi');
+    //         $logFile = dirname(__DIR__, 2) . '/admin_debug.log';
+    //         $logMessage = sprintf(
+    //             "=== getAllStudents START ===\nTime (Karachi): %s\nFilters received: %s\nDatabase connection: %s\n",
+    //             date('Y-m-d H:i:s T'),
+    //             print_r($filters, true),
+    //             ($this->db ? "Connected" : "Not connected")
+    //         );
+    //         file_put_contents($logFile, $logMessage, FILE_APPEND);
+            
+    //         // Verify database connection
+    //         try {
+    //             $this->db->query("SELECT 1");
+    //             error_log("Database connection verified");
+    //         } catch (\PDOException $e) {
+    //             error_log("Database connection failed: " . $e->getMessage());
+    //             throw new \Exception("Database connection failed");
+    //         }
+            
+    //         // Verify users table exists and has data
+    //         try {
+    //             $countCheck = $this->db->query("SELECT COUNT(*) FROM users WHERE role = 'student'");
+    //             $totalStudents = $countCheck->fetchColumn();
+    //             error_log("Total students in database: " . $totalStudents);
+    //         } catch (\PDOException $e) {
+    //             error_log("Error accessing users table: " . $e->getMessage());
+    //             throw new \Exception("Error accessing users table");
+    //         }
+            
+    //         $conditions = [];
+    //         $params = [];
+            
+    //         // Only show students, not admins
+    //         $conditions[] = "u.role = :role";
+    //         $params[':role'] = 'student';
+            
+    //         if (!empty($filters['search'])) {
+    //             $conditions[] = "(u.username LIKE :search OR u.email LIKE :search)";
+    //             $params[':search'] = "%" . $filters['search'] . "%";
+    //         }
+            
+    //         if (!empty($filters['programme'])) {
+    //             $conditions[] = "EXISTS (
+    //                 SELECT 1 FROM student_interests si2 
+    //                 WHERE si2.student_id = u.id 
+    //                 AND si2.programme_id = :programme_id
+    //             )";
+    //             $params[':programme_id'] = $filters['programme'];
+    //         }
+
+    //         // Build the base query using a correlated subquery for interests
+    //         // Build base query with better error detection
+    //         $query = "SELECT 
+    //                  u.id, 
+    //                  u.username, 
+    //                  u.email, 
+    //                  u.created_at, 
+    //                  u.role,
+    //                  COALESCE(
+    //                      (SELECT GROUP_CONCAT(DISTINCT p2.title ORDER BY p2.title SEPARATOR ', ')
+    //                       FROM student_interests si2 
+    //                       LEFT JOIN programmes p2 ON si2.programme_id = p2.id AND p2.is_published = 1
+    //                       WHERE si2.student_id = u.id), 
+    //                      ''
+    //                  ) as interests
+    //                  FROM users u";
+
+    //         // Add WHERE clause if there are conditions
+    //         if (!empty($conditions)) {
+    //             $query .= " WHERE " . implode(" AND ", $conditions);
+    //         }
+            
+    //         // Add ORDER BY (no need for GROUP BY since we're using a subquery)
+    //         $query .= " ORDER BY u.username";
+
+    //         error_log("Executing query: " . $query);
+    //         error_log("With params: " . print_r($params, true));
+
+    //         $stmt = $this->db->prepare($query);
+    //         foreach ($params as $key => $value) {
+    //             $stmt->bindValue($key, $value);
+    //         }
+            
+    //         try {
+    //             $stmt->execute();
+    //             $students = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    //             error_log("getAllStudents query executed successfully");
+    //             error_log("Raw query results: " . print_r($students, true));
+    //             error_log("Number of students found: " . count($students));
+                
+    //             if (empty($students)) {
+    //                 error_log("WARNING: No students found in database. This might indicate a problem.");
+    //                 return [];
+    //             }
+
+    //             // Process each student's interests
+    //             foreach ($students as &$student) {
+    //                 // Convert null interests to empty string
+    //                 $student['interests'] = $student['interests'] ?? '';
+                    
+    //                 // Convert comma-separated string to array of titles if not empty
+    //                 if (!empty($student['interests'])) {
+    //                     $titles = array_map('trim', explode(',', $student['interests']));
+    //                     $student['interests'] = array_map(function($title) {
+    //                         return ['title' => $title];
+    //                     }, $titles);
+    //                 } else {
+    //                     $student['interests'] = [];
+    //                 }
+    //             }
+    //             unset($student); // Unset reference to last element
+
+    //             return $students;
+
+    //         } catch (\PDOException $e) {
+    //             error_log("Error executing getAllStudents query: " . $e->getMessage());
+    //             error_log("SQL State: " . $e->errorInfo[0]);
+    //             error_log("Error Code: " . $e->errorInfo[1]);
+    //             error_log("Error Message: " . $e->errorInfo[2]);
+    //             throw new \Exception("Database error while fetching students");
+    //         }
+            
+    //     } catch (\PDOException $e) {
+    //         error_log("Database error in getAllStudents: " . $e->getMessage());
+    //         return [];
+    //     }
+    // }
+
+    // public function getAllStudents($filters = []) {
+    //     try {
+
+    //         // Verify database connection
+    //         $this->db->query("SELECT 1");
+    //         // Check total users and roles for debugging
+    //         $countCheck = $this->db->query("SELECT COUNT(*) FROM users");
+    //         $totalUsers = $countCheck->fetchColumn();
+    //         error_log("Total users in database: $totalUsers");
+    //         $countCheck = $this->db->query("SELECT DISTINCT role FROM users");
+    //         $roles = $countCheck->fetchAll(PDO::FETCH_COLUMN);
+    //         error_log("Available roles: " . print_r($roles, true));
+
+    //         $conditions = [];
+    //         $params = [];
+            
+    //         // Always filter for students
+    //         $conditions[] = "LOWER(u.role) = :role";
+    //         $params[':role'] = 'student';
+            
+    //         // Apply search filter on username only
+    //         if (!empty($filters['search'])) {
+    //             $conditions[] = "u.username LIKE :search";
+    //             $params[':search'] = "%" . $filters['search'] . "%";
+    //         }
+
+    //         // Build the query
+    //         $query = "SELECT 
+    //                  u.id, 
+    //                  u.username, 
+    //                  u.email, 
+    //                  u.created_at, 
+    //                  u.role
+    //                  FROM users u";
+
+    //         if (!empty($conditions)) {
+    //             $query .= " WHERE " . implode(" AND ", $conditions);
+    //         }
+            
+    //         $query .= " ORDER BY u.username";
+
+    //         error_log("Executing query: $query");
+    //         error_log("With params: " . print_r($params, true));
+
+    //         $stmt = $this->db->prepare($query);
+    //         foreach ($params as $key => $value) {
+    //             $stmt->bindValue($key, $value);
+    //         }
+            
+    //         $stmt->execute();
+    //         $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    //         error_log("Number of students found: " . count($students));
+    //         error_log("Raw query results: " . print_r($students, true));
+
+    //         if (empty($students)) {
+    //             error_log("WARNING: No students found in database.");
+    //         }
+
+    //         return $students;
+    //     } catch (\PDOException $e) {
+    //         error_log("Database error in getAllStudents: " . $e->getMessage());
+    //         return [];
+    //     }
+    // }
+    // public function getAllStudents($filters = []) {
+    //     try {
+    //         $query = "SELECT id, username, email, created_at, role FROM users WHERE LOWER(role) = :role";
+    //         $params = [':role' => 'student'];
+
+    //         if (!empty($filters['search'])) {
+    //             $query .= " AND username LIKE :search";
+    //             $params[':search'] = "%{$filters['search']}%";
+    //         }
+
+    //         $query .= " ORDER BY username";
+
+    //         $stmt = $this->db->prepare($query);
+    //         $stmt->execute($params);
+    //         $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    //         error_log("getAllStudents: Found " . count($students) . " students");
+    //         return $students;
+    //     } catch (\PDOException $e) {
+    //         error_log("getAllStudents error: " . $e->getMessage());
+    //         return [];
+    //     }
+    // }
+
+    // public function getAllStudents($filters = []) {
+    //     echo "Entered getAllStudents<br>";
+    //     try {
+    //         $query = "SELECT id, username, email, created_at, role FROM users WHERE LOWER(role) = :role";
+    //         $params = [':role' => 'student'];
+
+    //         if (!empty($filters['search'])) {
+    //             $query .= " AND username LIKE :search";
+    //             $params[':search'] = "%{$filters['search']}%";
+    //         }
+
+    //         $query .= " ORDER BY username";
+
+    //         $stmt = $this->db->prepare($query);
+    //         $stmt->execute($params);
+    //         $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    //         echo "Found " . count($students) . " students<br>";
+    //         return $students;
+    //     } catch (\PDOException $e) {
+    //         echo "Error in getAllStudents: " . $e->getMessage() . "<br>";
+    //         return [];
+    //     }
+    // }
     public function getAllStudents($filters = []) {
+        echo "<script>console.log('Entered getAllStudents');</script>";
         try {
-            $conditions = [];
-            $params = [];
-            
-            // Only show students, not admins
-            $conditions[] = "u.role = :role";
-            $params[':role'] = 'student';
-            
+            $query = "SELECT id, username, email, created_at, role FROM users WHERE LOWER(role) = :role";
+            $params = [':role' => 'student'];
+
             if (!empty($filters['search'])) {
-                $conditions[] = "(u.username LIKE :search OR u.email LIKE :search)";
-                $params[':search'] = "%" . $filters['search'] . "%";
-            }
-            
-            if (!empty($filters['programme'])) {
-                $conditions[] = "p.id = :programme_id";
-                $params[':programme_id'] = $filters['programme'];
+                $query .= " AND username LIKE :search";
+                $params[':search'] = "%{$filters['search']}%";
             }
 
-            $query = "SELECT u.id, u.username, u.email, u.created_at, u.role,
-                            GROUP_CONCAT(DISTINCT p.title SEPARATOR ', ') as interests
-                    FROM {$this->table} u
-                    LEFT JOIN student_interests si ON u.id = si.student_id
-                    LEFT JOIN programmes p ON si.programme_id = p.id
-                    WHERE " . implode(" AND ", $conditions) . "
-                    GROUP BY u.id, u.username, u.email, u.created_at, u.role
-                    ORDER BY u.username";
+            $query .= " ORDER BY username";
 
             $stmt = $this->db->prepare($query);
-            foreach ($params as $key => $value) {
-                $stmt->bindValue($key, $value);
-            }
-            $stmt->execute();
-            $students = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $stmt->execute($params);
+            $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            echo "<script>console.log('Found " . count($students) . " students');</script>";
+            return $students;
         } catch (\PDOException $e) {
-            error_log("Database error in getAllStudents: " . $e->getMessage());
-            throw $e;
+            echo "<script>console.log('Error in getAllStudents: " . addslashes($e->getMessage()) . "');</script>";
+            return [];
         }
-
-        // Convert comma-separated interests string to an array of associative arrays
-        // to match the view's expectation (array of interests, each with a 'title')
-        foreach ($students as &$student) {
-            if (!empty($student['interests'])) {
-                $interestTitles = explode(', ', $student['interests']);
-                $student['interests'] = [];
-                foreach ($interestTitles as $title) {
-                    $student['interests'][] = ['title' => $title];
-                }
-            } else {
-                $student['interests'] = []; // Ensure it's an empty array if no interests
-            }
-        }
-        unset($student); // Unset reference to last element
-
-        return $students;
     }
-
     public function getStudentDetails($studentId, $moduleId) {
         $query = "SELECT u.*, 
                         me.enrolled_date,

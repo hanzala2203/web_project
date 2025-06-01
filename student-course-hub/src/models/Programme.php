@@ -2,21 +2,69 @@
 
 namespace App\Models;
 
-class Programme extends Model {
+class Programme extends Model {    
     public function getAllProgrammes() {
-        $stmt = $this->db->query("
-            SELECT p.*, 
-                   GROUP_CONCAT(DISTINCT m.id) as module_ids,
-                   COUNT(DISTINCT m.id) as module_count
-            FROM programmes p
-            LEFT JOIN programme_modules pm ON p.id = pm.programme_id
-            LEFT JOIN modules m ON pm.module_id = m.id
-            GROUP BY p.id
-        ");
-        return $stmt->fetchAll();
+        error_log("=== getAllProgrammes START ===");
+        error_log("Time: " . date('Y-m-d H:i:s'));
+
+        try {
+            // Verify database connection
+            try {
+                $this->db->query("SELECT 1");
+                error_log("Database connection verified");
+            } catch (\PDOException $e) {
+                error_log("Database connection failed: " . $e->getMessage());
+                throw new \Exception("Database connection failed");
+            }
+
+            // First check if programmes table exists and has data
+            try {
+                $countCheck = $this->db->query("SELECT COUNT(*) FROM programmes");
+                $totalCount = $countCheck->fetchColumn();
+                error_log("Total programmes in database: " . $totalCount);
+            } catch (\PDOException $e) {
+                error_log("Error accessing programmes table: " . $e->getMessage());
+                throw new \Exception("Error accessing programmes table");
+            }
+
+            // If no programmes exist, add sample data
+            if ($totalCount == 0) {
+                error_log("No programmes found, adding sample data");
+                $this->addSampleProgrammes();
+            }
+
+            $query = "SELECT p.*, 
+                       GROUP_CONCAT(DISTINCT m.id) as module_ids,
+                       COUNT(DISTINCT m.id) as module_count
+                FROM programmes p
+                LEFT JOIN programme_modules pm ON p.id = pm.programme_id
+                LEFT JOIN modules m ON pm.module_id = m.id
+                GROUP BY p.id
+                ORDER BY p.title";
+            
+            error_log("Executing query: " . $query);
+            
+            $stmt = $this->db->query($query);
+            $results = $stmt->fetchAll();
+            error_log("Retrieved " . count($results) . " programmes");
+            
+            if (!empty($results)) {
+                error_log("Sample programme data: " . print_r($results[0], true));
+            }
+
+            // If still no data after trying to add sample data
+            if (empty($results)) {
+                error_log("WARNING: No programmes found even after attempting to add sample data");
+            }
+
+            return $results;
+        } catch (\PDOException $e) {
+            error_log("Error in getAllProgrammes: " . $e->getMessage());
+            return [];
+        }
     }
 
-    public function create($data) {
+    public function create($data){
         $sql = "INSERT INTO programmes (title, description, level, duration) 
                 VALUES (:title, :description, :level, :duration)";
         $stmt = $this->db->prepare($sql);
@@ -32,16 +80,25 @@ class Programme extends Model {
         $stmt = $this->db->prepare("SELECT COUNT(*) FROM programmes WHERE id = ?");
         $stmt->execute([$id]);
         return $stmt->fetchColumn() > 0;
-    }
-
-    public function getProgrammeStats() {
-        $total = $this->db->query("SELECT COUNT(*) FROM programmes")->fetchColumn();
-        $active = $this->db->query("SELECT COUNT(*) FROM programmes WHERE is_published = 1")->fetchColumn();
-        
-        return [
-            'total' => $total,
-            'active' => $active
-        ];
+    }    public function getProgrammeStats() {
+        try {
+            $total = $this->db->query("SELECT COUNT(*) FROM programmes")->fetchColumn();
+            
+            // Consider a programme active if it's published and has at least one module
+            $active = $this->db->query("
+                SELECT COUNT(DISTINCT p.id) 
+                FROM programmes p 
+                INNER JOIN programme_modules pm ON p.id = pm.programme_id 
+                WHERE p.is_published = 1")->fetchColumn();
+            
+            return [
+                'total' => (int)$total ?? 0,
+                'active' => (int)$active ?? 0
+            ];
+        } catch (\PDOException $e) {
+            error_log("Error in getProgrammeStats: " . $e->getMessage());
+            return ['total' => 0, 'active' => 0];
+        }
     }
 
     public function findById($id) {
@@ -574,6 +631,29 @@ class Programme extends Model {
         } catch (\PDOException $e) {
             error_log("Error getting modules for programme: " . $e->getMessage());
             throw new \Exception("Failed to retrieve programme modules");
+        }
+    }
+
+    public function getProgrammeStudents($programmeId) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT u.*, si.created_at as registered_at,
+                       CASE 
+                           WHEN e.id IS NOT NULL THEN 'active'
+                           ELSE 'interested'
+                       END as status
+                FROM users u
+                JOIN student_interests si ON u.id = si.student_id
+                LEFT JOIN enrollments e ON u.id = e.student_id AND e.programme_id = si.programme_id
+                WHERE si.programme_id = :programme_id
+                ORDER BY si.created_at DESC
+            ");
+            
+            $stmt->execute([':programme_id' => $programmeId]);
+            return $stmt->fetchAll();
+        } catch (\PDOException $e) {
+            error_log('Error getting programme students: ' . $e->getMessage());
+            throw new \Exception('Error retrieving programme students.');
         }
     }
 }

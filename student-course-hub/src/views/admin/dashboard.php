@@ -722,16 +722,7 @@ label {
                 </div>
             </div>
             
-            <div class="stat-card">
-                <div class="stat-icon bg-warning">
-                    <i class="fas fa-user-clock"></i>
-                </div>
-                <div class="stat-details">
-                    <h3>Pending Interests</h3>
-                    <p class="stat-number"><?php echo $stats['pending_interests'] ?? 'N/A'; ?></p>
-                    <span class="stat-label">Needs attention</span>
-                </div>
-            </div>
+
         </section>
 
         <section class="dashboard-section-grid">
