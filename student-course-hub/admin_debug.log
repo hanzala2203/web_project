@@ -1,0 +1,86 @@
+=== CHECKING ADMIN ACCESS ===
+2025-06-01 12:09:41
+Session data: Array
+(
+)
+
+Modules count: 22
+Sample modules:
+Array
+(
+    [0] => Array
+        (
+            [id] => 69
+            [title] => Programming Fundamentals
+            [description] => Introduction to programming concepts using Python
+            [credits] => 15
+            [year_of_study] => 1
+            [semester] => 1
+            [staff_id] => 
+            [created_at] => 2025-05-31 18:16:50
+        )
+
+    [1] => Array
+        (
+            [id] => 70
+            [title] => Data Structures & Algorithms
+            [description] => Essential data structures and algorithm analysis
+            [credits] => 15
+            [year_of_study] => 1
+            [semester] => 2
+            [staff_id] => 
+            [created_at] => 2025-05-31 18:16:50
+        )
+
+    [2] => Array
+        (
+            [id] => 71
+            [title] => Database Systems
+            [description] => Database design and SQL programming
+            [credits] => 15
+            [year_of_study] => 2
+            [semester] => 1
+            [staff_id] => 
+            [created_at] => 2025-05-31 18:16:50
+        )
+
+    [3] => Array
+        (
+            [id] => 72
+            [title] => Web Development
+            [description] => Full-stack web application development
+            [credits] => 15
+            [year_of_study] => 2
+            [semester] => 2
+            [staff_id] => 
+            [created_at] => 2025-05-31 18:16:50
+        )
+
+    [4] => Array
+        (
+            [id] => 73
+            [title] => Artificial Intelligence
+            [description] => AI principles and applications
+            [credits] => 15
+            [year_of_study] => 3
+            [semester] => 1
+            [staff_id] => 
+            [created_at] => 2025-05-31 18:16:50
+        )
+
+)
+
+=== getAllStudents START ===
+Time (Karachi): 2025-06-01 22:16:32 PKT
+Filters received: Array
+(
+)
+
+Database connection: Connected
+=== getAllStudents START ===
+Time (Karachi): 2025-06-01 23:47:51 PKT
+Filters received: Array
+(
+)
+
+Database connection: Connected
