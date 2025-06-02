@@ -253,9 +253,11 @@ $activeMenu = "dashboard";
                                         <?php echo htmlspecialchars($module['student_count'] ?? 0); ?> Students
                                     </p>
                                 </div>
-                                <a href="/student-course-hub/staff/modules/view?id=<?php echo $module['id']; ?>" class="module-link">
-                                    View Details <i class="fas fa-arrow-right"></i>
-                                </a>
+                                <a href="/student-course-hub/staff/modules/<?php echo $module['id']; ?>" class="module-link">
+                                        <!-- <i class="fas fa-eye"></i> -->
+                                        View Details
+                                        <i class="fas fa-arrow-right"></i>
+                                 </a>
                             </div>
                         <?php endforeach;
                     else: ?>

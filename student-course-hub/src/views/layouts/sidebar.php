@@ -23,12 +23,8 @@ $currentUri = $_SERVER['REQUEST_URI'];
             </li>
             <li class="<?php echo isActive($currentUri, '/admin/students'); ?>">
                 <a href="/student-course-hub/admin/students"><i class="fas fa-users"></i> Students</a>
-            </li>
-            <li class="<?php echo isActive($currentUri, '/admin/staff'); ?>">
+            </li>            <li class="<?php echo isActive($currentUri, '/admin/staff'); ?>">
                 <a href="/student-course-hub/admin/staff"><i class="fas fa-user-tie"></i> Staff</a>
-            </li>
-            <li class="<?php echo isActive($currentUri, '/admin/settings'); ?>">
-                <a href="/student-course-hub/admin/settings"><i class="fas fa-cogs"></i> Settings</a>
             </li>
         </ul>
     </nav>

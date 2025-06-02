@@ -7,10 +7,9 @@ require_once __DIR__ . '/../../layouts/header.php';
     <?php include_once __DIR__ . '/../../layouts/sidebar.php'; ?>
 
     <main class="admin-main">
-        <div class="container py-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="container py-4">            <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="h3">Students - <?php echo htmlspecialchars($programme['title']); ?></h1>
-                <a href="/student-course-hub/admin/programmes" class="btn btn-secondary">
+                <a href="<?php echo BASE_URL; ?>/admin/programmes" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Back to Programmes
                 </a>
             </div>
@@ -28,10 +27,9 @@ require_once __DIR__ . '/../../layouts/header.php';
             <?php endif; ?>
 
             <div class="card">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
+                <div class="card-header">                    <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Registered Students</h5>
-                        <a href="/student-course-hub/admin/programmes/<?php echo $programme['id']; ?>/students/export" class="btn btn-success">
+                        <a href="<?php echo BASE_URL; ?>/admin/programmes/<?php echo $programme['id']; ?>/students/export" class="btn btn-success">
                             <i class="fas fa-file-export"></i> Export List
                         </a>
                     </div>
@@ -64,8 +62,7 @@ require_once __DIR__ . '/../../layouts/header.php';
                                                     <?php echo ucfirst(htmlspecialchars($student['status'] ?? 'interested')); ?>
                                                 </span>
                                             </td>
-                                            <td>
-                                                <a href="/student-course-hub/admin/students/<?php echo $student['id']; ?>" class="btn btn-sm btn-info">
+                                            <td>                                                <a href="<?php echo BASE_URL; ?>/admin/students/<?php echo $student['id']; ?>" class="btn btn-sm btn-info">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                             </td>
