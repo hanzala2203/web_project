@@ -105,9 +105,7 @@ $activeMenu = "staff"; // For highlighting the active menu item in the sidebar
                             <?php endforeach; ?>
                         </ul>
                     </div>
-                <?php endif; ?>
-
-                <form method="POST" action="/student-course-hub/admin/staff">
+                <?php endif; ?>                <form method="POST" action="/student-course-hub/admin/staff/create">
                     <div class="form-group">
                         <label for="username">Username <span class="required">*</span></label>
                         <input type="text" name="username" id="username" class="form-control <?php echo isset($errors['username']) ? 'is-invalid' : ''; ?>" value="<?php echo htmlspecialchars($data['username'] ?? ''); ?>" required>

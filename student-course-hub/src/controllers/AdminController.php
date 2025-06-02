@@ -42,33 +42,94 @@ class AdminController
 
     public function showCreateProgrammeForm()
     {
-        // This method would typically render a form for creating a new programme.
-        // For now, let's assume it includes a view file.
-        // You'll need to create this view file: /src/views/admin/programmes/create.php
+        // Clear any previous success/error messages that aren't related to form submission
+        if (!isset($_SESSION['form_errors'])) {
+            unset($_SESSION['success_message'], $_SESSION['error_message']);
+        }
+
+        // Load the create form view
         include BASE_PATH . '/src/views/admin/programmes/create.php';
+    }
+
+    private function validateProgrammeData($data, $isUpdate = false) 
+    {
+        $errors = [];
+        
+        // Required fields
+        if (empty($data['title'])) $errors['title'] = "Title is required.";
+        if (empty($data['level'])) $errors['level'] = "Level is required.";
+        if (empty($data['duration'])) $errors['duration'] = "Duration is required.";
+        
+        // Validate level values
+        $allowedLevels = ['undergraduate', 'postgraduate', 'doctorate'];
+        if (!empty($data['level']) && !in_array(strtolower($data['level']), $allowedLevels)) {
+            $errors['level'] = "Invalid level. Must be one of: " . implode(', ', $allowedLevels);
+        }
+        
+        // Validate duration format (e.g., "3 years", "2 semesters", etc.)
+        if (!empty($data['duration']) && !preg_match('/^\d+\s*(year|years|semester|semesters)$/i', $data['duration'])) {
+            $errors['duration'] = "Invalid duration format. Example: '3 years' or '2 semesters'";
+        }
+        
+        // Title uniqueness check (only for new programmes or if title changed)
+        if (!$isUpdate || ($isUpdate && isset($data['original_title']) && $data['title'] !== $data['original_title'])) {
+            if ($this->programme->titleExists($data['title'], $isUpdate ? $data['id'] : null)) {
+                $errors['title'] = "A programme with this title already exists.";
+            }
+        }
+        
+        return $errors;
     }
 
     public function createProgramme($data)
     {
-        // Basic validation (you should expand this)
-        if (empty($data['title']) || empty($data['level'])) {
-            // Handle error - perhaps redirect back with an error message
-            // For simplicity, we'll just echo an error and exit
-            echo "Title and Level are required.";
-            // You might want to include the create form again with an error message
-            // include BASE_PATH . '/src/views/admin/programmes/create.php';
-            return;
+        error_log("AdminController: createProgramme START ===");
+        error_log("Time: " . date('Y-m-d H:i:s'));
+        error_log("Raw data received: " . print_r($data, true));
+        
+        $errors = $this->validateProgrammeData($data);
+        
+        if (!empty($errors)) {
+            error_log("AdminController: Validation errors found: " . print_r($errors, true));
+            $_SESSION['error_message'] = "Please correct the errors below.";
+            $_SESSION['form_data'] = $data;
+            $_SESSION['form_errors'] = $errors;
+            header('Location: /student-course-hub/admin/programmes/create');
+            exit;
         }
         
         try {
-            $this->programme->create($data);
-            // Redirect to the programmes list after creation
-            header('Location: /student-course-hub/admin/programmes');
+            // Sanitize and prepare data
+            $programmeData = [
+                'title' => htmlspecialchars($data['title']),
+                'description' => htmlspecialchars($data['description'] ?? ''),
+                'level' => strtolower(htmlspecialchars($data['level'])),
+                'duration' => htmlspecialchars($data['duration']),
+                'is_published' => isset($data['is_published']) ? 1 : 0,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+            
+            error_log("AdminController: Prepared data for creation: " . print_r($programmeData, true));
+            
+            $result = $this->programme->create($programmeData);
+            error_log("AdminController: Programme creation result: " . ($result ? "success with ID: $result" : "failed"));
+            
+            if ($result) {
+                $_SESSION['success_message'] = "Programme created successfully.";
+                header('Location: /student-course-hub/admin/programmes');
+            } else {
+                throw new Exception("Failed to create programme - no ID returned");
+            }
             exit;
-        } catch (Exception $e) {
-            // Log error or show a user-friendly message
-            echo "Error creating programme: " . $e->getMessage();
-            // include BASE_PATH . '/src/views/admin/programmes/create.php';
+        }
+        catch (Exception $e) {
+            error_log("AdminController: Error creating programme: " . $e->getMessage());
+            error_log("AdminController: Stack trace: " . $e->getTraceAsString());
+            $_SESSION['error_message'] = "Error creating programme: " . $e->getMessage();
+            $_SESSION['form_data'] = $data;
+            header('Location: /student-course-hub/admin/programmes/create');
+            exit;
         }
     }
 
@@ -87,39 +148,164 @@ class AdminController
 
     public function updateProgramme($id, $data)
     {
-        // Basic validation
-        if (empty($data['title']) || empty($data['level'])) {
-            echo "Title and Level are required.";
-            // You might want to include the edit form again with an error message
-            // $programme = $this->programme->findById($id);
-            // include BASE_PATH . '/src/views/admin/programmes/edit.php';
-            return;
+        // First validate if programme exists
+        $programme = $this->programme->findById($id);
+        if (!$programme) {
+            $_SESSION['error_message'] = "Programme not found.";
+            header('Location: /student-course-hub/admin/programmes');
+            exit;
         }
 
-        $data['id'] = $id; // Ensure the ID is part of the data array for the update method
-        
+        $errors = [];
+        // Validate required fields
+        if (empty($data['title'])) $errors['title'] = "Title is required.";
+        if (empty($data['level'])) $errors['level'] = "Level is required.";
+        if (empty($data['duration'])) $errors['duration'] = "Duration is required.";
+
+        if (!empty($errors)) {
+            $_SESSION['error_message'] = "Please correct the errors below.";
+            $_SESSION['form_data'] = $data;
+            $_SESSION['form_errors'] = $errors;
+            header('Location: /student-course-hub/admin/programmes/' . $id . '/edit');
+            exit;
+        }
+
         try {
-            $this->programme->update($data);
+            // Sanitize and prepare data
+            $programmeData = [
+                'id' => $id,
+                'title' => htmlspecialchars($data['title']),
+                'description' => htmlspecialchars($data['description'] ?? ''),
+                'level' => htmlspecialchars($data['level']),
+                'duration' => htmlspecialchars($data['duration']),
+                'is_published' => isset($data['is_published']) ? 1 : 0
+            ];
+
+            $this->programme->update($programmeData);
+            $_SESSION['success_message'] = "Programme updated successfully.";
             header('Location: /student-course-hub/admin/programmes');
             exit;
         } catch (Exception $e) {
-            echo "Error updating programme: " . $e->getMessage();
-            // $programme = $this->programme->findById($id); // Fetch again for the form
-            // include BASE_PATH . '/src/views/admin/programmes/edit.php';
+            error_log("Error updating programme: " . $e->getMessage());
+            $_SESSION['error_message'] = "Error updating programme. Please try again.";
+            $_SESSION['form_data'] = $data;
+            header('Location: /student-course-hub/admin/programmes/' . $id . '/edit');
+            exit;
         }
     }
 
+    // public function viewProgramme($id)
+    // {
+    //     try {
+    //         $programme = $this->programme->findById($id);
+
+    //         if (!$programme) {
+    //             $_SESSION['error_message'] = "Programme not found.";
+    //             header('Location: /student-course-hub/admin/programmes');
+    //             exit;
+    //         }
+
+    //         // Get all modules associated with this programme
+    //         $modules = $this->module->getByProgramme($id);
+    //         $programme['modules'] = $modules;
+
+    //         // Pass the data to the view
+    //         include BASE_PATH . '/src/views/admin/programmes/view.php';
+    //     } catch (Exception $e) {
+    //         error_log("Error viewing programme: " . $e->getMessage());
+    //         $_SESSION['error_message'] = "Error viewing programme: " . $e->getMessage();
+    //         header('Location: /student-course-hub/admin/programmes');
+    //         exit;
+    //     }
+    // }
+
+
+    public function viewProgramme($id)
+{
+    try {
+        // Log the programme ID being processed
+        echo "<script>console.log('viewProgramme: Starting with programme ID: " . htmlspecialchars($id, ENT_QUOTES, 'UTF-8') . "');</script>";
+
+        $programme = $this->programme->findById($id);
+        
+        if (!$programme) {
+            // Log when programme is not found
+            echo "<script>console.log('viewProgramme: Programme not found for ID: " . htmlspecialchars($id, ENT_QUOTES, 'UTF-8') . "');</script>";
+            $_SESSION['error_message'] = "Programme not found.";
+            header('Location: /student-course-hub/admin/programmes');
+            exit;
+        }
+
+        // Log the programme details
+        echo "<script>console.log('viewProgramme: Programme found - Title: " . htmlspecialchars($programme['title'] ?? 'Unknown', ENT_QUOTES, 'UTF-8') . ", Data: ', " . json_encode($programme) . ");</script>";
+
+        // Get all modules associated with this programme
+        $modules = $this->module->getByProgramme($id);
+
+        // Log the number of modules retrieved
+        echo "<script>console.log('viewProgramme: Retrieved ' + " . count($modules) . " + ' modules for programme ID: " . htmlspecialchars($id, ENT_QUOTES, 'UTF-8') . "');</script>";
+        // Log the modules data
+        echo "<script>console.log('viewProgramme: Modules data: ', " . json_encode($modules) . ");</script>";
+
+        $programme['modules'] = $modules;
+
+        // Log before rendering the view
+        echo "<script>console.log('viewProgramme: Rendering view for programme ID: " . htmlspecialchars($id, ENT_QUOTES, 'UTF-8') . "');</script>";
+
+        include BASE_PATH . '/src/views/admin/programmes/view.php';
+    } catch (Exception $e) {
+        // Log the error
+        $errorMessage = htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+        echo "<script>console.log('viewProgramme: Error for programme ID: " . htmlspecialchars($id, ENT_QUOTES, 'UTF-8') . " - Error: " . $errorMessage . "');</script>";
+        
+        $_SESSION['error_message'] = "Error viewing programme: " . $e->getMessage();
+        header('Location: /student-course-hub/admin/programmes');
+        exit;
+    }
+}
     public function deleteProgramme($id)
     {
         try {
-            $this->programme->delete($id);
+            error_log("Starting programme deletion process for ID: " . $id);
+            
+            // First check if programme exists
+            $programme = $this->programme->findById($id);
+            if (!$programme) {
+                error_log("Programme not found with ID: " . $id);
+                $_SESSION['error_message'] = "Programme not found.";
+                header('Location: /student-course-hub/admin/programmes');
+                exit;
+            }
+            error_log("Programme found: " . json_encode($programme));
+
+            // Check for enrolled students
+            $hasStudents = $this->programme->hasEnrolledStudents($id);
+            error_log("Has enrolled students check result: " . ($hasStudents ? 'true' : 'false'));
+            if ($hasStudents) {
+                $_SESSION['error_message'] = "Cannot delete programme with enrolled students.";
+                header('Location: /student-course-hub/admin/programmes');
+                exit;
+            }
+
+            // Attempt deletion
+            error_log("Attempting to delete programme with ID: " . $id);
+            $deleteResult = $this->programme->delete($id);
+            if ($deleteResult) {
+                error_log("Programme successfully deleted");
+                $_SESSION['success_message'] = "Programme deleted successfully.";
+            } else {
+                error_log("Programme deletion returned false");
+                throw new \Exception("Programme deletion failed");
+            }
+            
             header('Location: /student-course-hub/admin/programmes');
             exit;
-        } catch (Exception $e) {
-            echo "Error deleting programme: " . $e->getMessage();
-            // It might be good to redirect back with an error message
-            // header('Location: /student-course-hub/admin/programmes?error=' . urlencode($e->getMessage()));
-            // exit;
+        } catch (\Exception $e) {
+            error_log("Error in deleteProgramme: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            $_SESSION['error_message'] = "Error deleting programme. Please try again.";
+            header('Location: /student-course-hub/admin/programmes');
+            exit;
         }
     }
 
@@ -434,35 +620,67 @@ class AdminController
         include BASE_PATH . '/src/views/admin/modules/create.php';
     }
 
-    public function createModule($data)
+    public function createModuleForm()
     {
-        $errors = [];
-        if (empty($data['title'])) $errors['title'] = "Title is required.";
-        if (empty($data['credits'])) $errors['credits'] = "Credits are required.";
-        if (empty($data['programme_id'])) $errors['programme_id'] = "Programme is required.";
-        // Add more validation as needed
+        try {
+            $programmes = $this->programme->getAllProgrammes();
+            $staffList = $this->staff->getAllStaff();
+            
+            // Clear previous form data and errors if any
+            $data = $_SESSION['form_data'] ?? [];
+            $errors = $_SESSION['form_errors'] ?? [];
+            unset($_SESSION['form_data'], $_SESSION['form_errors']);
 
-        if (!empty($errors)) {
-            $_SESSION['error_message'] = "Please correct the errors below.";
-            $_SESSION['form_data'] = $data;
-            $_SESSION['form_errors'] = $errors;
-            header('Location: /student-course-hub/admin/modules/create');
+            include BASE_PATH . '/src/views/admin/modules/create.php';
+        } catch (\Exception $e) {
+            error_log("Error in createModuleForm: " . $e->getMessage());
+            $_SESSION['error_message'] = "Error loading module creation form: " . $e->getMessage();
+            header('Location: /student-course-hub/admin/modules');
             exit;
         }
-        
+    }
+
+    public function createModule($data)
+    {
         try {
-            $this->module->createModule(
+            $errors = [];
+            if (empty($data['title'])) $errors['title'] = "Title is required.";
+            if (empty($data['credits'])) $errors['credits'] = "Credits are required.";
+            if (!is_numeric($data['credits']) || $data['credits'] <= 0) $errors['credits'] = "Credits must be a positive number.";
+            if (empty($data['programme_id'])) $errors['programme_id'] = "Programme is required.";
+            if (empty($data['year_of_study'])) $errors['year_of_study'] = "Year of Study is required.";
+            if (!is_numeric($data['year_of_study']) || $data['year_of_study'] <= 0) $errors['year_of_study'] = "Year of Study must be a positive number.";
+            if (!empty($data['semester']) && (!is_numeric($data['semester']) || $data['semester'] < 1 || $data['semester'] > 2)) {
+                $errors['semester'] = "Semester must be 1 or 2";
+            }
+
+            if (!empty($errors)) {
+                $_SESSION['form_errors'] = $errors;
+                $_SESSION['form_data'] = $data;
+                $_SESSION['error_message'] = "Please correct the errors below.";
+                header('Location: /student-course-hub/admin/modules/create');
+                exit;
+            }
+            
+            $moduleId = $this->module->createModule(
                 $data['title'], 
                 $data['description'] ?? '', 
                 $data['credits'],
                 $data['year_of_study'] ?? null,
                 $data['programme_id'],
-                $data['staff_id'] ?? null
+                $data['staff_id'] ?? null,
+                $data['semester'] ?? 1
             );
-            $_SESSION['success_message'] = "Module created successfully.";
-            header('Location: /student-course-hub/admin/modules');
+
+            if ($moduleId) {
+                $_SESSION['success_message'] = "Module created successfully.";
+                header('Location: /student-course-hub/admin/modules');
+            } else {
+                throw new \Exception("Failed to create module");
+            }
             exit;
         } catch (\Exception $e) {
+            error_log("Error creating module: " . $e->getMessage());
             $_SESSION['error_message'] = "Error creating module: " . $e->getMessage();
             $_SESSION['form_data'] = $data;
             header('Location: /student-course-hub/admin/modules/create');
@@ -723,20 +941,6 @@ class AdminController
         ];
     }
 
-    private function validateProgrammeData(array $data): void
-    {
-        $required = ['title', 'description', 'level'];
-        foreach ($required as $field) {
-            if (empty($data[$field])) {
-                throw new Exception("$field is required");
-            }
-        }
-
-        if (!empty($data['image'])) {
-            $this->validateProgrammeImage($data['image']);
-        }
-    }
-
     private function validateModuleData(array $data): void
     {
         $required = ['title', 'credits', 'level'];
@@ -807,30 +1011,59 @@ class AdminController
         }
     }
 
-    public function publishProgram($id) {
+    public function publishProgramme($id) {
         try {
-            if (!$this->programme->exists($id)) {
+            $programme = $this->programme->findById($id);
+            if (!$programme) {
                 throw new Exception("Programme not found");
             }
 
-            return $this->programme->updatePublishStatus($id, true);
+            $this->programme->update([
+                'id' => $id,
+                'is_published' => 1,
+                'updated_at' => date('Y-m-d H:i:s')
+            ]);
+
+            error_log("Programme published: " . $id);
+            $_SESSION['success_message'] = "Programme published successfully.";
+            
         } catch (Exception $e) {
-            error_log("Error publishing program: " . $e->getMessage());
-            throw new Exception("Failed to publish program: " . $e->getMessage());
+            error_log("Error publishing programme: " . $e->getMessage());
+            $_SESSION['error_message'] = "Error publishing programme. Please try again.";
         }
+        
+        header('Location: /student-course-hub/admin/programmes');
+        exit;
     }
 
-    public function unpublishProgram($id) {
+    public function unpublishProgramme($id) {
         try {
-            if (!$this->programme->exists($id)) {
+            $programme = $this->programme->findById($id);
+            if (!$programme) {
                 throw new Exception("Programme not found");
             }
 
-            return $this->programme->updatePublishStatus($id, false);
+            // Check if there are enrolled students before unpublishing
+            if ($this->programme->hasEnrolledStudents($id)) {
+                throw new Exception("Cannot unpublish programme with enrolled students");
+            }
+
+            $this->programme->update([
+                'id' => $id,
+                'is_published' => 0,
+                'updated_at' => date('Y-m-d H:i:s')
+            ]);
+
+            error_log("Programme unpublished: " . $id);
+            $_SESSION['success_message'] = "Programme unpublished successfully.";
+            
         } catch (Exception $e) {
-            error_log("Error unpublishing program: " . $e->getMessage());
-            throw new Exception("Failed to unpublish program: " . $e->getMessage());
+            error_log("Error unpublishing programme: " . $e->getMessage());
+            $_SESSION['error_message'] = "Error unpublishing programme: " . $e->getMessage();
         }
+        
+        header('Location: /student-course-hub/admin/programmes');
+        exit;
     }
 
     public function manageModules($programId, $moduleData) {
@@ -967,6 +1200,42 @@ class AdminController
             error_log("Error showing programme students: " . $e->getMessage());
             $_SESSION['error'] = "Failed to retrieve programme students";
             header('Location: /student-course-hub/admin/programmes');
+            exit;
+        }
+    }
+
+    public function deleteModule($id)
+    {
+        try {
+            // Check if module exists
+            $module = $this->module->getModuleById($id);
+            if (!$module) {
+                $_SESSION['error_message'] = "Module not found.";
+                header('Location: /student-course-hub/admin/modules');
+                exit;
+            }
+
+            try {
+                // Check for enrolled students
+                $hasEnrolledStudents = $this->module->hasEnrolledStudents($id);
+                if ($hasEnrolledStudents) {
+                    $_SESSION['error_message'] = "Cannot delete module with enrolled students.";
+                    header('Location: /student-course-hub/admin/modules');
+                    exit;
+                }
+            } catch (\PDOException $e) {
+                // If there's an issue with the enrollments table, log it but allow deletion
+                error_log("Error checking enrollments: " . $e->getMessage());
+            }
+            
+            $this->module->deleteModule($id);
+            $_SESSION['success_message'] = "Module deleted successfully.";
+            header('Location: /student-course-hub/admin/modules');
+            exit;
+        } catch (\Exception $e) {
+            error_log("Error deleting module: " . $e->getMessage());
+            $_SESSION['error_message'] = "Error deleting module: " . $e->getMessage();
+            header('Location: /student-course-hub/admin/modules');
             exit;
         }
     }

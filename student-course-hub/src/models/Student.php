@@ -25,7 +25,7 @@ class Student extends Model {
     }
 
     public function findById($id) {
-        $query = "SELECT u.* 
+        $query = "SELECT u.id, u.username, u.email, u.role, u.created_at, u.avatar_url
                  FROM {$this->table} u
                  WHERE u.id = :id AND u.role = 'student'";
         $stmt = $this->db->prepare($query);
@@ -98,7 +98,7 @@ class Student extends Model {
             ");
             $result = $stmt->execute([
                 ':student_id' => $studentId,
-                ':programme_id' => $ProgrammeId
+                ':programme_id' => $programmeId
             ]);
 
             if (!$result) {
@@ -471,7 +471,7 @@ class Student extends Model {
     public function getAllStudents($filters = []) {
         echo "<script>console.log('Entered getAllStudents');</script>";
         try {
-            $query = "SELECT id, username, email, created_at, role FROM users WHERE LOWER(role) = :role";
+            $query = "SELECT id, username, email, created_at, role, avatar_url FROM users WHERE LOWER(role) = :role";
             $params = [':role' => 'student'];
 
             if (!empty($filters['search'])) {
@@ -493,7 +493,7 @@ class Student extends Model {
         }
     }
     public function getStudentDetails($studentId, $moduleId) {
-        $query = "SELECT u.*, 
+        $query = "SELECT u.id, u.username, u.email, u.role, u.created_at, u.avatar_url,
                         me.enrolled_date,
                         me.progress as module_progress,
                         me.last_activity_date

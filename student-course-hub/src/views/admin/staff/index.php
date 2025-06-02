@@ -737,9 +737,7 @@ label {
                                                 <td><?php echo htmlspecialchars($staff['username']); ?></td>
                                                 <td><?php echo htmlspecialchars($staff['email']); ?></td>
                                                 <td><span class="badge badge-secondary"><?php echo htmlspecialchars(ucfirst($staff['role'] ?? 'Staff')); ?></span></td>
-                                                <td><?php echo htmlspecialchars(isset($staff['created_at']) ? date('Y-m-d H:i', strtotime($staff['created_at'])) : 'N/A'); ?></td>
-                                                <td>
-                                                    <a href="/student-course-hub/admin/staff/<?php echo $staff['id']; ?>/edit" class="btn btn-sm btn-info" title="Edit"><i class="fas fa-edit"></i></a>
+                                                <td><?php echo htmlspecialchars(isset($staff['created_at']) ? date('Y-m-d H:i', strtotime($staff['created_at'])) : 'N/A'); ?></td>                                                <td>
                                                     <form method="POST" action="/student-course-hub/admin/staff/<?php echo $staff['id']; ?>/delete" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this staff member? This will also unassign them from any modules they lead.');">
                                                         <button type="submit" class="btn btn-sm btn-danger" title="Delete"><i class="fas fa-trash"></i></button>
                                                     </form>

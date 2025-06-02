@@ -5,12 +5,12 @@ use App\Controllers\AuthController;
 use App\Controllers\StaffController;
 use App\Controllers\StudentController;
 
-// Get the request path
+// Parse request path to match index.php behavior
 $request = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$base = '/student-course-hub';
-$path = str_replace($base, '', $request);
-$path = rtrim($path, '/');
-if (empty($path)) $path = '/';
+$path = str_replace(BASE_URL, '', $request);
+
+// Remove .php extension if present
+$path = preg_replace('/\.php$/', '', $path);
 
 // Handle .php extension
 if (substr($path, -4) === '.php') {
@@ -52,7 +52,17 @@ switch ($path) {
     case (preg_match('/^\\/staff\\/programmes\\/(\\d+)$/', $path, $matches) ? $path : ''):
         $staff = new StaffController();
         $staff->viewProgramme($matches[1]);
-        break;
+        break;    // Regex for matching /admin/programmes/{id}/view - MUST COME BEFORE THE GENERIC /admin/programmes route
+     // Regex for matching /admin/programmes/{id}/view
+    // case (preg_match('/^\/admin\/programmes\/(\d+)\/view$/', $path, $matches) ? $path : ''):
+    //     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            
+    //         echo "<script>console.log('yes');</script>";
+    //         $admin->viewProgramme($matches[1]); 
+    //     }
+        
+    //         echo "<script>console.log('yes');</script>";
+    //     break;
 
     case '/admin/programmes':
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -68,25 +78,37 @@ switch ($path) {
             $admin->showCreateProgrammeForm(); // Assumes a method in AdminController
         }
         break;
-
-    // Regex for matching /admin/programmes/{id}/edit
-    case (preg_match('/^\\/admin\\/programmes\\/(\\d+)\\/edit$/', $path, $matches) ? $path : ''):
+    case (preg_match('/^\/admin\/programmes\/(\d+)\/edit$/', $path, $matches) ? true : false):
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $admin->showEditProgrammeForm($matches[1]); // Assumes a method in AdminController
         }
         break;
 
     // Regex for matching /admin/programmes/{id}/update
-    case (preg_match('/^\\/admin\\/programmes\\/(\\d+)\\/update$/', $path, $matches) ? $path : ''):
+    case (preg_match('/^\/admin\/programmes\/(\d+)\/update$/', $path, $matches) ? true : false):
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $admin->updateProgramme($matches[1], $_POST); // Assumes a method in AdminController
+            
+            echo "<script>console.log('yes2');</script>";
+            $admin->updateProgramme($matches[1], $_POST);
         }
         break;
-
-    // Regex for matching /admin/programmes/{id}/delete
     case (preg_match('/^\\/admin\\/programmes\\/(\\d+)\\/delete$/', $path, $matches) ? $path : ''):
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $admin->deleteProgramme($matches[1]); // Assumes a method in AdminController
+        }       
+        break;
+    
+    // Regex for matching /admin/programmes/{id}/publish
+    case (preg_match('/^\\/admin\\/programmes\\/(\\d+)\\/publish$/', $path, $matches) ? $path : ''):
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $admin->publishProgramme($matches[1]);
+        }
+        break;
+
+    // Regex for matching /admin/programmes/{id}/unpublish
+    case (preg_match('/^\\/admin\\/programmes\\/(\\d+)\\/unpublish$/', $path, $matches) ? $path : ''):
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $admin->unpublishProgramme($matches[1]);
         }
         break;
 

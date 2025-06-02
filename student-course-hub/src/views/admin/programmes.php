@@ -685,8 +685,7 @@ label {
                 <h1>Programmes Management</h1>
                 <p>Manage all academic programmes.</p>
             </div>
-            <div class="header-right">
-                <a href="/student-course-hub/admin/programmes/create" class="btn btn-primary btn-icon">
+            <div class="header-right">                <a href="<?php echo BASE_URL; ?>/admin/programmes/create" class="btn btn-primary btn-icon">
                     <i class="fas fa-plus"></i> Add New Programme
                 </a>
             </div>
@@ -710,7 +709,7 @@ label {
                 </div>
                 <div class="card-body">
                     <?php if (empty($programmes)): ?>
-                        <div class="alert alert-info">No programmes found. <a href="/student-course-hub/admin/programmes/create">Add the first one!</a></div>
+                        <div class="alert alert-info">No programmes found. <a href="<?php echo BASE_URL; ?>/admin/programmes/create">Add the first one!</a></div>
                     <?php else: ?>
                         <div class="table-responsive">
                             <table class="table table-striped table-hover">
@@ -735,22 +734,17 @@ label {
                                                 <span class="badge <?php echo $programme['is_published'] ? 'badge-success' : 'badge-warning'; ?>">
                                                     <?php echo $programme['is_published'] ? 'Published' : 'Draft'; ?>
                                                 </span>
-                                            </td>
-                                            <td class="table-actions">
-                                                <a href="/student-course-hub/admin/programmes/<?php echo htmlspecialchars($programme['id']); ?>/view" class="btn btn-sm btn-info mr-2">
+                                            </td>                                            <td class="table-actions">
+                                                <a href="<?php echo BASE_URL; ?>/admin/programmes/<?php echo htmlspecialchars($programme['id']); ?>/view" class="btn btn-sm btn-info mr-2">
                                                     <i class="fas fa-eye"></i> View
-                                                </a>
-                                                <a href="/student-course-hub/admin/programmes/<?php echo htmlspecialchars($programme['id']); ?>/students" class="btn btn-sm btn-success mr-2">
-                                                    <i class="fas fa-users"></i> View Students
-                                                </a>
-                                                <button type="button" class="btn btn-sm btn-primary mr-2" onclick="editProgramme(<?php echo $programme['id']; ?>)">
+                                                </a>                                                <a href="<?php echo BASE_URL; ?>/admin/programmes/<?php echo htmlspecialchars($programme['id']); ?>/edit" class="btn btn-sm btn-success mr-2">
                                                     <i class="fas fa-edit"></i> Edit
-                                                </button>
-                                                <button type="button" class="btn btn-sm btn-danger" onclick="deleteProgramme(<?php echo $programme['id']; ?>)">
-                                                    <i class="fas fa-trash"></i> Delete
-                                                </button>
-
-                                                <!-- ...existing code... -->
+                                                </a>
+                                                <form action="<?php echo BASE_URL; ?>/admin/programmes/<?php echo htmlspecialchars($programme['id']); ?>/delete" method="POST" style="display: inline;">
+                                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this programme?')">
+                                                        <i class="fas fa-trash"></i> Delete
+                                                    </button>
+                                                </form>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

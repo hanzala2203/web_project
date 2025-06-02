@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/../../controllers/AuthController.php';
+use App\Controllers\AuthController;
+
 $pageTitle = 'Register';
 
 // Set base URL

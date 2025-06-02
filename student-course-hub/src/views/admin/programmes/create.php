@@ -14,8 +14,28 @@ $activeMenu = "programmes"; // For highlighting the active menu item in the side
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($pageTitle); ?> - Admin</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title><?php echo htmlspecialchars($pageTitle); ?> - Admin</title>    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#3b82f6',
+                            hover: '#2563eb'
+                        },
+                        secondary: {
+                            DEFAULT: '#4CAF50',
+                            hover: '#45a049'
+                        },
+                        error: '#ef4444',
+                        background: '#f1f5f9',
+                    }
+                }
+            }
+        }
+    </script>
     <style type="text/css">
         /* Basic layout and typography */
         body { font-family: sans-serif; margin: 0; background-color: #f4f7f6; color: #333; box-sizing: border-box; }
@@ -105,14 +125,12 @@ $activeMenu = "programmes"; // For highlighting the active menu item in the side
                             <?php endforeach; ?>
                         </ul>
                     </div>
-                <?php endif; ?>
-
-                <form method="POST" action="/student-course-hub/admin/programmes">
+                <?php endif; ?>                <form method="POST" action="/student-course-hub/admin/programmes">
                     <div class="form-group">
-                        <label for="name">Programme Name <span class="required">*</span></label>
-                        <input type="text" name="name" id="name" class="form-control <?php echo isset($errors['name']) ? 'is-invalid' : ''; ?>" value="<?php echo htmlspecialchars($data['name'] ?? ''); ?>" required>
-                        <?php if (isset($errors['name'])): ?>
-                            <div class="invalid-feedback"><?php echo htmlspecialchars($errors['name']); ?></div>
+                        <label for="title">Programme Title <span class="required">*</span></label>
+                        <input type="text" name="title" id="title" class="form-control <?php echo isset($errors['title']) ? 'is-invalid' : ''; ?>" value="<?php echo htmlspecialchars($data['title'] ?? ''); ?>" required>
+                        <?php if (isset($errors['title'])): ?>
+                            <div class="invalid-feedback"><?php echo htmlspecialchars($errors['title']); ?></div>
                         <?php endif; ?>
                     </div>
 
@@ -125,11 +143,34 @@ $activeMenu = "programmes"; // For highlighting the active menu item in the side
                     </div>
 
                     <div class="form-group">
-                        <label for="duration_years">Duration (Years) <span class="required">*</span></label>
-                        <input type="number" name="duration_years" id="duration_years" class="form-control <?php echo isset($errors['duration_years']) ? 'is-invalid' : ''; ?>" value="<?php echo htmlspecialchars($data['duration_years'] ?? ''); ?>" required min="1">
-                        <?php if (isset($errors['duration_years'])): ?>
-                            <div class="invalid-feedback"><?php echo htmlspecialchars($errors['duration_years']); ?></div>
+                        <label for="level">Level <span class="required">*</span></label>
+                        <select name="level" id="level" class="form-control <?php echo isset($errors['level']) ? 'is-invalid' : ''; ?>" required>
+                            <option value="">Select Level</option>
+                            <option value="undergraduate" <?php echo (($data['level'] ?? '') === 'undergraduate') ? 'selected' : ''; ?>>Undergraduate</option>
+                            <option value="postgraduate" <?php echo (($data['level'] ?? '') === 'postgraduate') ? 'selected' : ''; ?>>Postgraduate</option>
+                            <option value="doctorate" <?php echo (($data['level'] ?? '') === 'doctorate') ? 'selected' : ''; ?>>Doctorate</option>
+                        </select>
+                        <?php if (isset($errors['level'])): ?>
+                            <div class="invalid-feedback"><?php echo htmlspecialchars($errors['level']); ?></div>
                         <?php endif; ?>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="duration">Duration <span class="required">*</span></label>
+                        <div class="duration-input-group">
+                            <input type="text" name="duration" id="duration" class="form-control <?php echo isset($errors['duration']) ? 'is-invalid' : ''; ?>" value="<?php echo htmlspecialchars($data['duration'] ?? ''); ?>" placeholder="e.g. 3 years" required>
+                            <small class="form-text text-muted">Enter duration like '3 years' or '2 semesters'</small>
+                        </div>
+                        <?php if (isset($errors['duration'])): ?>
+                            <div class="invalid-feedback"><?php echo htmlspecialchars($errors['duration']); ?></div>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="is_published" name="is_published" value="1" <?php echo (($data['is_published'] ?? '') == 1) ? 'checked' : ''; ?>>
+                            <label class="custom-control-label" for="is_published">Publish this programme</label>
+                        </div>
                     </div>
                     
                     <div class="form-actions">
