@@ -58,29 +58,114 @@ class Programme extends Model {
             }
 
             return $results;
-        } catch (\PDOException $e) {
+        }        catch (\PDOException $e) {
             error_log("Error in getAllProgrammes: " . $e->getMessage());
             return [];
         }
     }
-
-    public function create($data){
-        $sql = "INSERT INTO programmes (title, description, level, duration) 
-                VALUES (:title, :description, :level, :duration)";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
-            ':title' => $data['title'],
-            ':description' => $data['description'],
-            ':level' => $data['level'],
-            ':duration' => $data['duration'] ?? '3 years'
-        ]);
+    
+    public function create($data) {
+        error_log("=== Programme::create START ===");
+        error_log("Time: " . date('Y-m-d H:i:s'));
+        error_log("Data received: " . print_r($data, true));
+        
+        try {
+            // Verify database connection first
+            try {
+                $this->db->query("SELECT 1");
+                error_log("Database connection verified");
+            } catch (\PDOException $e) {
+                error_log("Database connection failed: " . $e->getMessage());
+                throw new \Exception("Database connection failed");
+            }            $sql = "INSERT INTO programmes (title, description, level, duration, is_published) 
+                    VALUES (:title, :description, :level, :duration, :is_published)";
+            
+            error_log("Preparing SQL: " . $sql);
+            $stmt = $this->db->prepare($sql);
+            
+            if (!$stmt) {
+                error_log("Failed to prepare statement: " . print_r($this->db->errorInfo(), true));
+                throw new \Exception("Failed to prepare statement");
+            }
+            
+            $params = [
+                ':title' => $data['title'],
+                ':description' => $data['description'] ?? '',
+                ':level' => $data['level'],
+                ':duration' => $data['duration'] ?? '3 years',
+                ':is_published' => $data['is_published'] ?? 0
+            ];
+            
+            error_log("Executing with params: " . print_r($params, true));
+            $result = $stmt->execute($params);
+            
+            if (!$result) {
+                error_log("Execute failed: " . print_r($stmt->errorInfo(), true));
+                throw new \Exception("Failed to create programme");
+            }
+            
+            $newId = $this->db->lastInsertId();
+            error_log("Successfully created programme with ID: " . $newId);
+            
+            // Verify the created record
+            $verifyStmt = $this->db->prepare("SELECT * FROM programmes WHERE id = ?");
+            $verifyStmt->execute([$newId]);
+            $createdProgramme = $verifyStmt->fetch();
+            error_log("Verification of created programme: " . print_r($createdProgramme, true));
+            
+            error_log("=== Programme::create END ===");
+            return $newId;
+        } catch (\PDOException $e) {
+            error_log("Database error in create: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            throw new \Exception("Database error: " . $e->getMessage());
+        } catch (\Exception $e) {
+            error_log("Error in create: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            throw $e;
+        }
     }
-
     public function exists($id) {
         $stmt = $this->db->prepare("SELECT COUNT(*) FROM programmes WHERE id = ?");
         $stmt->execute([$id]);
         return $stmt->fetchColumn() > 0;
-    }    public function getProgrammeStats() {
+    }
+
+    public function titleExists($title, $excludeId = null) {
+        $sql = "SELECT COUNT(*) FROM programmes WHERE LOWER(title) = LOWER(:title)";
+        $params = [':title' => $title];
+        
+        if ($excludeId) {
+            $sql .= " AND id != :id";
+            $params[':id'] = $excludeId;
+        }
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchColumn() > 0;
+    }    public function hasEnrolledStudents($id) {
+        try {
+            // First check if the table exists
+            $tableCheck = $this->db->query("SHOW TABLES LIKE 'student_enrolments'");
+            if ($tableCheck->rowCount() == 0) {
+                // Table doesn't exist, so no students can be enrolled
+                error_log("student_enrolments table does not exist, assuming no enrolled students");
+                return false;
+            }
+
+            $stmt = $this->db->prepare("
+                SELECT COUNT(*) 
+                FROM student_enrolments
+                WHERE programme_id = :id
+            ");
+            $stmt->execute([':id' => $id]);
+            return $stmt->fetchColumn() > 0;
+        } catch (\PDOException $e) {
+            error_log("Error checking enrolled students: " . $e->getMessage());
+            // If there's any error, assume no students are enrolled to allow deletion
+            return false;
+        }
+    }public function getProgrammeStats() {
         try {
             $total = $this->db->query("SELECT COUNT(*) FROM programmes")->fetchColumn();
             
@@ -167,12 +252,23 @@ class Programme extends Model {
             ':duration' => $data['duration'] ?? '3 years',
             ':is_published' => $is_published
         ]);
-    }
-
-    public function delete($id) {
+    }    public function delete($id) {
         $sql = "DELETE FROM programmes WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([':id' => $id]);
+    }
+    
+    public function updatePublishStatus($id, $isPublished) {
+        $stmt = $this->db->prepare("
+            UPDATE programmes 
+            SET is_published = :is_published,
+                updated_at = NOW()
+            WHERE id = :id
+        ");
+        return $stmt->execute([
+            ':id' => $id,
+            ':is_published' => $isPublished ? 1 : 0
+        ]);
     }
 
     public function hasStudentInterest($studentId, $programmeId) {
@@ -244,16 +340,13 @@ class Programme extends Model {
             error_log('Error getting programmes by module IDs: ' . $e->getMessage());
             throw new \Exception('Error retrieving programmes.');
         }
-    }
-
-    public function getStaffMembers($programmeId) {
-        $stmt = $this->db->prepare("
-            SELECT DISTINCT 
+    }    public function getStaffMembers($programmeId) {
+        $stmt = $this->db->prepare("            SELECT DISTINCT 
                 u.id,
                 u.username as name,
                 u.email,
-                'Module Leader' as role,
-                u.avatar_url
+                u.avatar_url,
+                'Module Leader' as role
             FROM users u
             INNER JOIN modules m ON u.id = m.staff_id
             INNER JOIN programme_modules pm ON m.id = pm.module_id

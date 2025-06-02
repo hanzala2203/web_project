@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\User;
+use App\Models\Student;
 use Exception;
 
 class AuthController {
@@ -167,8 +168,7 @@ class AuthController {
 
             // If registering as a student, create student record
             if ($data['role'] === 'student') {
-                require_once __DIR__ . '/../models/Student.php';
-                $student = new Student($this->db);
+                $student = new Student();
                 
                 $studentData = [
                     'user_id' => $userId,

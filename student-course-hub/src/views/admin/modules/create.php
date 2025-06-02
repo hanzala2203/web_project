@@ -85,17 +85,15 @@ $activeMenu = "modules"; // For highlighting the active menu item in the sidebar
                         </ol>
                     </nav>
                 </div>
-            </header>
-
-            <main class="content-area">
-                <?php if (session_has('success_message')): ?>
+            </header>            <main class="content-area">
+                <?php if (isset($_SESSION['success_message'])): ?>
                     <div class="alert alert-success">
-                        <?php echo session_get('success_message'); session_delete('success_message'); ?>
+                        <?php echo htmlspecialchars($_SESSION['success_message']); unset($_SESSION['success_message']); ?>
                     </div>
                 <?php endif; ?>
-                <?php if (session_has('error_message')): ?>
+                <?php if (isset($_SESSION['error_message'])): ?>
                     <div class="alert alert-danger">
-                        <?php echo session_get('error_message'); session_delete('error_message'); ?>
+                        <?php echo htmlspecialchars($_SESSION['error_message']); unset($_SESSION['error_message']); ?>
                     </div>
                 <?php endif; ?>
                 <?php if (!empty($errors)): ?>
@@ -132,23 +130,30 @@ $activeMenu = "modules"; // For highlighting the active menu item in the sidebar
                         <?php if (isset($errors['description'])): ?>
                             <div class="invalid-feedback"><?php echo htmlspecialchars($errors['description']); ?></div>
                         <?php endif; ?>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="year_of_study">Year of Study</label>
-                        <input type="number" name="year_of_study" id="year_of_study" class="form-control <?php echo isset($errors['year_of_study']) ? 'is-invalid' : ''; ?>" value="<?php echo htmlspecialchars($data['year_of_study'] ?? ''); ?>">
+                    </div>                    <div class="form-group">
+                        <label for="year_of_study">Year of Study <span class="required">*</span></label>
+                        <input type="number" name="year_of_study" id="year_of_study" class="form-control <?php echo isset($errors['year_of_study']) ? 'is-invalid' : ''; ?>" value="<?php echo htmlspecialchars($data['year_of_study'] ?? '1'); ?>" required min="1">
                         <?php if (isset($errors['year_of_study'])): ?>
                             <div class="invalid-feedback"><?php echo htmlspecialchars($errors['year_of_study']); ?></div>
                         <?php endif; ?>
                     </div>
-
+                    
                     <div class="form-group">
+                        <label for="semester">Semester</label>
+                        <select name="semester" id="semester" class="form-control <?php echo isset($errors['semester']) ? 'is-invalid' : ''; ?>">
+                            <option value="1" <?php echo (($data['semester'] ?? '1') == '1') ? 'selected' : ''; ?>>1</option>
+                            <option value="2" <?php echo (($data['semester'] ?? '') == '2') ? 'selected' : ''; ?>>2</option>
+                        </select>
+                        <?php if (isset($errors['semester'])): ?>
+                            <div class="invalid-feedback"><?php echo htmlspecialchars($errors['semester']); ?></div>
+                        <?php endif; ?>
+                    </div><div class="form-group">
                         <label for="programme_id">Programme <span class="required">*</span></label>
                         <select name="programme_id" id="programme_id" class="form-control <?php echo isset($errors['programme_id']) ? 'is-invalid' : ''; ?>" required>
                             <option value="">Select Programme</option>
                             <?php foreach ($programmes as $programme): ?>
                                 <option value="<?php echo $programme['id']; ?>" <?php echo (($data['programme_id'] ?? '') == $programme['id']) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($programme['name']); ?>
+                                    <?php echo htmlspecialchars($programme['title']); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -158,12 +163,11 @@ $activeMenu = "modules"; // For highlighting the active menu item in the sidebar
                     </div>
                     
                     <div class="form-group">
-                        <label for="staff_id">Module Leader (Staff)</label>
-                        <select name="staff_id" id="staff_id" class="form-control <?php echo isset($errors['staff_id']) ? 'is-invalid' : ''; ?>">
+                        <label for="staff_id">Module Leader (Staff)</label>                        <select name="staff_id" id="staff_id" class="form-control <?php echo isset($errors['staff_id']) ? 'is-invalid' : ''; ?>">
                             <option value="">Select Module Leader</option>
                             <?php foreach ($staffList as $staff): ?>
                                 <option value="<?php echo $staff['id']; ?>" <?php echo (($data['staff_id'] ?? '') == $staff['id']) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($staff['name']); // Assuming staff has a 'name' field ?>
+                                    <?php echo htmlspecialchars($staff['username']); ?> (<?php echo htmlspecialchars($staff['email']); ?>)
                                 </option>
                             <?php endforeach; ?>
                         </select>

@@ -1,4 +1,6 @@
 <?php
+
+use App\Controllers\StaffController;
 // Error reporting
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -11,6 +13,8 @@ define('BASE_URL', '/student-course-hub');
 
 // Start session
 session_start();
+
+// Add console log
 
 // Load configurations
 require_once BASE_PATH . '/src/config/config.php';
@@ -37,6 +41,11 @@ $path = str_replace(BASE_URL, '', $request);
 // Remove .php extension if present
 $path = preg_replace('/\.php$/', '', $path);
 
+// Debug logging
+error_log("Request URI: " . $_SERVER['REQUEST_URI']);
+error_log("Request Method: " . $_SERVER['REQUEST_METHOD']);
+error_log("Path after processing: " . $path);
+
 // Route the request
 switch ($path) {
     case '':
@@ -44,6 +53,36 @@ switch ($path) {
         require_once BASE_PATH . '/src/views/home.php';
         break;
     
+    // Handle programme creation - show form
+    case '/admin/programmes/create':
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $admin = new \App\Controllers\AdminController();
+            $admin->showCreateProgrammeForm();
+        }
+        break;
+
+    // Handle programme creation - process form
+    case '/admin/programmes':
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $admin = new \App\Controllers\AdminController();
+            $admin->listProgrammes();
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $admin = new \App\Controllers\AdminController();
+            $admin->createProgramme($_POST);
+        }
+        break;
+
+    // Handle programme deletion
+    case (preg_match('/^\/admin\/programmes\/(\d+)\/delete$/', $path, $matches) ? true : false):
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $admin = new \App\Controllers\AdminController();
+            $admin->deleteProgramme($matches[1]);
+        } else {
+            header('Location: /student-course-hub/admin/programmes');
+            exit;
+        }
+        break;
+
     // Auth routes
     case '/auth/login':
     case '/auth/login.php':
@@ -57,13 +96,49 @@ switch ($path) {
                 exit;
             }
         } else {
+            if (isset($_SESSION['user_id'])) {
+                // If already logged in, redirect to appropriate dashboard
+                if ($_SESSION['role'] === 'admin') {
+                    header('Location: ' . BASE_URL . '/admin/dashboard');
+                } else if ($_SESSION['role'] === 'staff') {
+                    header('Location: ' . BASE_URL . '/staff/dashboard');
+                } else {
+                    header('Location: ' . BASE_URL . '/student/dashboard');
+                }
+                exit;
+            }
             require_once BASE_PATH . '/src/views/auth/login.php';
         }
         break;
         
     case '/auth/register':
     case '/auth/register.php':
-        require_once BASE_PATH . '/src/views/auth/register.php';
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $auth = new \App\Controllers\AuthController();
+                $auth->register($_POST);
+                $_SESSION['success'] = 'Registration successful! Please login.';
+                header('Location: ' . BASE_URL . '/auth/login');
+                exit;
+            } catch (Exception $e) {
+                $_SESSION['error'] = $e->getMessage();
+                header('Location: ' . BASE_URL . '/auth/register');
+                exit;
+            }
+        } else {
+            if (isset($_SESSION['user_id'])) {
+                // If already logged in, redirect to appropriate dashboard
+                if ($_SESSION['role'] === 'admin') {
+                    header('Location: ' . BASE_URL . '/admin/dashboard');
+                } else if ($_SESSION['role'] === 'staff') {
+                    header('Location: ' . BASE_URL . '/staff/dashboard');
+                } else {
+                    header('Location: ' . BASE_URL . '/student/dashboard');
+                }
+                exit;
+            }
+            require_once BASE_PATH . '/src/views/auth/register.php';
+        }
         break;
         
     // Student routes
@@ -128,21 +203,142 @@ switch ($path) {
         }
         break;
         
+    case '/staff/dashboard':
+        $staff = new StaffController();
+        $staff->dashboard();
+        break;
+
+    case '/staff/modules':
+        $staff = new StaffController();
+        $staff->listModules();
+        break;    case (preg_match('/^\\/staff\\/modules\\/(\\d+)$/', $path, $matches) ? $path : ''):
+        $staff = new StaffController();
+        $staff->viewModule($matches[1]);
+        break;    case (preg_match('/^\\/staff\\/modules\\/(\\d+)\\/students$/', $path, $matches) ? $path : ''):
+        $staff = new StaffController();
+        $staff->viewModuleStudents($matches[1]);
+        break;
+
     // Admin routes
     case '/admin/dashboard':
     case '/admin/dashboard.php':
         require_once BASE_PATH . '/src/views/admin/dashboard.php';
         break;
-        
+    case preg_match('/^\/admin\/programmes\/(\d+)\/view$/', $path, $matches) ? true : false:
+        echo "<script>console.log('yes');</script>";
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {  // Changed to GET
+            $admin = new \App\Controllers\AdminController();
+            $admin->viewProgramme($matches[1]);
+            
+        } else {
+            
+            echo "<script>console.log('yes');</script>";
+            header('Location: ' . BASE_URL . '/admin/programmes/view');  // Added BASE_URL
+        }
+        break;
+
+    // case preg_match('/^\/admin\/programme\/(\d+)\/view$/', $path, $matches) ? true : false:
+    //     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    //         $programmeId = (int)$matches[1];
+    //         if ($programmeId > 0) {
+    //             $admin = new \App\Controllers\AdminController();
+    //             $admin->viewProgramme($programmeId);
+    //         } else {
+    //             http_response_code(400);
+    //             $_SESSION['error'] = 'Invalid programme ID';
+    //             header('Location: ' . BASE_URL . '/admin/programmes');
+    //             exit();
+    //         }
+    //     } else {
+    //         http_response_code(405);
+    //         $_SESSION['error'] = 'Method not allowed. Use GET.';
+    //         header('Location: ' . BASE_URL . '/admin/programmes');
+    //         exit();
+    //     }
+    //     break;
+    //     // break;
+    
+    // case (preg_match('/^\/admin\/programmes(\/create|\/edit|$)/', $path) ? $path : ''):
+    //     // Only basic programme routes are handled in web.php
+    //     require_once BASE_PATH . '/routes/web.php';
+    //     break;
+
     case '/admin/programmes':
-        require_once BASE_PATH . '/src/controllers/AdminController.php';
-        $controller = new \App\Controllers\AdminController();
-        $controller->listProgrammes();
+        
+        $admin = new \App\Controllers\AdminController();
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $admin->listProgrammes();
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // This will be used by the form submission from /admin/programmes/create
+            $admin->createProgramme($_POST);
+        }
         break;
         
+    case '/admin/programmes/create':
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $admin = new \App\Controllers\AdminController();
+            $admin->showCreateProgrammeForm();
+        }
+        break;
+
+    case (preg_match('/^\/admin\/programmes\/(\d+)\/edit$/', $path, $matches) ? true : false):
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $admin = new \App\Controllers\AdminController();
+            $admin->showEditProgrammeForm($matches[1]);
+        }
+        break;
+
+    // Handle programme update
+    case (preg_match('/^\/admin\/programmes\/(\d+)\/update$/', $path, $matches) ? true : false):
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $admin = new \App\Controllers\AdminController();
+            
+            echo "<script>console.log('yes');</script>";
+            $admin->updateProgramme($matches[1], $_POST);
+        }
+        break;
+
     case '/admin/modules':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $admin = new \App\Controllers\AdminController();
+            $admin->createModule($_POST);
+        } else {
+            $admin = new \App\Controllers\AdminController();
+            $admin->listModules();
+        }
+        break;
+
+    case '/admin/modules/create':
+        require_once BASE_PATH . '/src/controllers/AdminController.php';
         $admin = new \App\Controllers\AdminController();
-        $admin->listModules();
+        $admin->createModuleForm();
+        break;
+
+    // Handle module deletion
+    case preg_match('/^\/admin\/modules\/(\d+)\/delete$/', $path, $matches) ? true : false:
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $admin = new \App\Controllers\AdminController();
+            $admin->deleteModule($matches[1]);
+        } else {
+            header('Location: /student-course-hub/admin/modules');
+        }
+        break;
+
+    // Handle module editing
+    case preg_match('/^\/admin\/modules\/(\d+)\/edit$/', $path, $matches) ? true : false:
+        require_once BASE_PATH . '/src/controllers/AdminController.php';
+        $admin = new \App\Controllers\AdminController();
+        $admin->showEditModuleForm($matches[1]);
+        break;
+
+    // Handle module update
+    case preg_match('/^\/admin\/modules\/(\d+)\/update$/', $path, $matches) ? true : false:
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $admin = new \App\Controllers\AdminController();
+            $admin->updateModule($matches[1], $_POST);
+        } else {
+            header('Location: /student-course-hub/admin/modules');
+        }
         break;
         
     case '/admin/students':
@@ -152,7 +348,44 @@ switch ($path) {
         break;
 
     case '/admin/staff':
-        require_once BASE_PATH . '/src/views/admin/staff.php';
+        $admin = new \App\Controllers\AdminController();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $admin->adminStoreStaff($_POST);
+        } else {
+            $admin->adminStaffList();
+        }
+        break;
+        
+    case '/admin/staff/create':
+        $admin = new \App\Controllers\AdminController();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $admin->adminStoreStaff($_POST);
+        } else {
+            $admin->adminCreateStaffForm();
+        }
+        break;
+
+    case preg_match('/^\/admin\/staff\/(\d+)\/update$/', $path, $matches) ? true : false:
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $admin = new \App\Controllers\AdminController();
+            $admin->adminUpdateStaff($matches[1], $_POST);
+        } else {
+            header('Location: /student-course-hub/admin/staff');
+        }
+        break;
+
+    case preg_match('/^\/admin\/staff\/(\d+)\/delete$/', $path, $matches) ? true : false:
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $admin = new \App\Controllers\AdminController();
+            $admin->adminDeleteStaff($matches[1]);
+        } else {
+            header('Location: /student-course-hub/admin/staff');
+        }
+        break;
+
+    case preg_match('/^\/admin\/staff\/(\d+)\/edit$/', $path, $matches) ? true : false:
+        $admin = new \App\Controllers\AdminController();
+        $admin->adminEditStaffForm($matches[1]);
         break;
         
     case '/auth/logout':
@@ -184,14 +417,15 @@ switch ($path) {
     case '/admin/students':
         require_once BASE_PATH . '/src/views/admin/students.php';
         break;
-        break;
         
     case '/login':
-        require_once BASE_PATH . '/src/views/auth/login.php';
+        header('Location: ' . BASE_URL . '/auth/login');
+        exit();
         break;
         
     case '/register':
-        require_once BASE_PATH . '/src/views/auth/register.php';
+        header('Location: ' . BASE_URL . '/auth/register');
+        exit();
         break;
         
     case '/error':

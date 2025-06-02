@@ -103,7 +103,7 @@ ob_start();
             <div class="text-center">
                 <p class="text-sm text-gray-600">
                     Don't have an account? 
-                    <a href="<?php echo $base_url; ?>/register" class="font-medium text-primary-600 hover:text-primary-500">
+                    <a href="/student-course-hub/auth/register" class="font-medium text-primary-600 hover:text-primary-500">
                         Register here
                     </a>
                 </p>

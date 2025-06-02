@@ -593,7 +593,7 @@ class StudentController extends Model {
                        m.semester,
                        u.username as staff_name,
                        u.email as staff_email,
-                       NULL as staff_avatar
+                       u.avatar_url as staff_avatar
                 FROM programmes p
                 JOIN student_programmes sp ON p.id = sp.programme_id
                 JOIN programme_modules pm ON p.id = pm.programme_id

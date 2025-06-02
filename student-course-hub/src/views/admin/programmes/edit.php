@@ -21,8 +21,28 @@ $errors = $errors ?? [];
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($pageTitle); ?> - Admin</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title><?php echo htmlspecialchars($pageTitle); ?> - Admin</title>    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#3b82f6',
+                            hover: '#2563eb'
+                        },
+                        secondary: {
+                            DEFAULT: '#4CAF50',
+                            hover: '#45a049'
+                        },
+                        error: '#ef4444',
+                        background: '#f1f5f9',
+                    }
+                }
+            }
+        }
+    </script>
     <style type="text/css">
         /* Basic layout and typography */
         body { font-family: sans-serif; margin: 0; background-color: #f4f7f6; color: #333; box-sizing: border-box; }
@@ -116,29 +136,41 @@ $errors = $errors ?? [];
 
                 <?php if (empty($programme)): ?>
                     <div class="alert alert-warning">Programme not found or could not be loaded.</div>
-                <?php else: ?>
-                    <form method="POST" action="/student-course-hub/admin/programmes/<?php echo htmlspecialchars($programme['id']); ?>/update">
-                        <input type="hidden" name="_method" value="PUT"> <!-- Or PATCH depending on your route -->
-
+                <?php else: ?>                    <form method="POST" action="/student-course-hub/admin/programmes/<?php echo htmlspecialchars($programme['id']); ?>/update">
                         <div class="form-group">
-                            <label for="name">Programme Name <span class="required">*</span></label>
-                            <input type="text" name="name" id="name" class="form-control <?php echo isset($errors['name']) ? 'is-invalid' : ''; ?>" value="<?php echo htmlspecialchars($data['name'] ?? ''); ?>" required>
-                            <?php if (isset($errors['name'])): ?>
-                                <div class="invalid-feedback"><?php echo htmlspecialchars($errors['name']); ?></div>
+                            <label for="title">Programme Name <span class="required">*</span></label>
+                            <input type="text" name="title" id="title" class="form-control <?php echo isset($errors['title']) ? 'is-invalid' : ''; ?>" value="<?php echo htmlspecialchars($data['title'] ?? $programme['title'] ?? ''); ?>" required>
+                            <?php if (isset($errors['title'])): ?>
+                                <div class="invalid-feedback"><?php echo htmlspecialchars($errors['title']); ?></div>
                             <?php endif; ?>
                         </div>
 
                         <div class="form-group">
                             <label for="description">Description</label>
-                            <textarea name="description" id="description" class="form-control <?php echo isset($errors['description']) ? 'is-invalid' : ''; ?>" rows="4"><?php echo htmlspecialchars($data['description'] ?? ''); ?></textarea>
+                            <textarea name="description" id="description" class="form-control <?php echo isset($errors['description']) ? 'is-invalid' : ''; ?>" rows="4"><?php echo htmlspecialchars($data['description'] ?? $programme['description'] ?? ''); ?></textarea>
                             <?php if (isset($errors['description'])): ?>
                                 <div class="invalid-feedback"><?php echo htmlspecialchars($errors['description']); ?></div>
                             <?php endif; ?>
                         </div>
 
                         <div class="form-group">
-                            <label for="duration_years">Duration (Years) <span class="required">*</span></label>
-                            <input type="number" name="duration_years" id="duration_years" class="form-control <?php echo isset($errors['duration_years']) ? 'is-invalid' : ''; ?>" value="<?php echo htmlspecialchars($data['duration_years'] ?? ''); ?>" required min="1">
+                            <label for="level">Level <span class="required">*</span></label>
+                            <select name="level" id="level" class="form-control <?php echo isset($errors['level']) ? 'is-invalid' : ''; ?>" required>
+                                <option value="undergraduate" <?php echo (($data['level'] ?? $programme['level']) === 'undergraduate') ? 'selected' : ''; ?>>Undergraduate</option>
+                                <option value="postgraduate" <?php echo (($data['level'] ?? $programme['level']) === 'postgraduate') ? 'selected' : ''; ?>>Postgraduate</option>
+                                <option value="doctorate" <?php echo (($data['level'] ?? $programme['level']) === 'doctorate') ? 'selected' : ''; ?>>Doctorate</option>
+                            </select>
+                            <?php if (isset($errors['level'])): ?>
+                                <div class="invalid-feedback"><?php echo htmlspecialchars($errors['level']); ?></div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="duration">Duration <span class="required">*</span></label>
+                            <input type="text" name="duration" id="duration" placeholder="e.g. 3 years" class="form-control <?php echo isset($errors['duration']) ? 'is-invalid' : ''; ?>" value="<?php echo htmlspecialchars($data['duration'] ?? $programme['duration'] ?? ''); ?>" required>
+                            <?php if (isset($errors['duration'])): ?>
+                                <div class="invalid-feedback"><?php echo htmlspecialchars($errors['duration']); ?></div>
+                            <?php endif; ?>
                             <?php if (isset($errors['duration_years'])): ?>
                                 <div class="invalid-feedback"><?php echo htmlspecialchars($errors['duration_years']); ?></div>
                             <?php endif; ?>
